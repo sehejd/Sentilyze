@@ -357,6 +357,136 @@ export interface BacktestIndicatorsResponse {
   fundamental_metrics: Record<string, { direction: 'low' | 'high'; bands: [number, number, number] }>;
 }
 
+// ---- Political "deeper dive": lobbying, bills, executives, campaign finance ----
+
+export interface LobbyingFilingSummary {
+  filing_uuid: string;
+  registrant: string | null;
+  filing_year: number;
+  filing_period: string;
+  amount: number | null;
+  bill_references: string[];
+  dt_posted: string;
+}
+
+export interface LobbyingBillReference {
+  bill_type: string;
+  number: string;
+  raw: string;
+  mentions: number;
+  issue_areas: string[];
+}
+
+export interface LobbyingSummary {
+  success: boolean;
+  ticker?: string;
+  company_name?: string;
+  total_filings: number;
+  estimated_total_spend: number;
+  registrants: string[];
+  issue_areas: Record<string, number>;
+  bill_references: LobbyingBillReference[];
+  filings: LobbyingFilingSummary[];
+  source: string;
+  error?: string;
+}
+
+export interface BillSponsor {
+  name: string;
+  party: string | null;
+  state: string | null;
+  bioguide_id: string | null;
+  chamber: 'House' | 'Senate';
+}
+
+export interface PoliticalBill {
+  success: boolean;
+  congress?: number;
+  bill_type: string;
+  bill_number: string;
+  title?: string;
+  sponsor?: BillSponsor | null;
+  cosponsors_count?: number;
+  policy_area?: string;
+  introduced_date?: string;
+  latest_action?: { text: string; date: string };
+  congress_gov_url?: string;
+  mentions?: number;
+  issue_areas?: string[];
+  error?: string;
+  source: string;
+}
+
+export interface CompanyOfficer {
+  name: string;
+  title: string | null;
+  age: number | null;
+  total_pay: number | null;
+  year_born: number | null;
+}
+
+export interface OfficersResult {
+  success: boolean;
+  ticker?: string;
+  company_name?: string;
+  officers: CompanyOfficer[];
+  note?: string;
+  error?: string;
+  source?: string;
+}
+
+export interface PoliticalDonation {
+  contributor_name: string;
+  contributor_employer: string | null;
+  contributor_occupation: string | null;
+  amount: number;
+  date: string;
+  committee_name: string | null;
+  committee_party: string | null;
+  candidate_name: string | null;
+  election_year: number | null;
+}
+
+export interface ExecutiveDonationEntry {
+  name: string;
+  title: string | null;
+  donations: PoliticalDonation[];
+  lookup_error?: string | null;
+}
+
+export interface ExecutiveDonationsResult {
+  success: boolean;
+  employer_searched: string;
+  executives: ExecutiveDonationEntry[];
+  source: string;
+  timestamp: string;
+}
+
+export interface PoliticalConnection {
+  type: 'bill_sponsor_trades_stock' | 'executive_donated_to_bill_sponsor';
+  description: string;
+  bill: string;
+  sponsor?: string;
+  trader_name?: string;
+  executive?: string;
+  donation_amount?: number;
+  donation_date?: string;
+  confidence: string;
+}
+
+export interface PoliticalNetworkResponse {
+  ticker: string;
+  company_name: string;
+  lobbying: LobbyingSummary;
+  bills: PoliticalBill[];
+  officers: OfficersResult;
+  executive_donations: ExecutiveDonationsResult | null;
+  connections: PoliticalConnection[];
+  congress_gov_configured: boolean;
+  timestamp: string;
+  disclaimer: string;
+}
+
 // Enum for different scraper sources
 export enum ScraperSource {
   YAHOO = 'yahoo',
@@ -484,5 +614,15 @@ export const fetchBacktestIndicators = async (): Promise<BacktestIndicatorsRespo
 
 export const runBacktest = async (request: BacktestRequest): Promise<BacktestResponse> => {
   const response = await apiClient.post('/api/backtest', request);
+  return response.data;
+};
+
+export const fetchPoliticalNetwork = async (
+  ticker: string,
+  companyName?: string
+): Promise<PoliticalNetworkResponse> => {
+  const params = new URLSearchParams({ ticker: ticker.toUpperCase() });
+  if (companyName) params.set('company_name', companyName);
+  const response = await apiClient.get(`/api/political-network?${params.toString()}`);
   return response.data;
 };

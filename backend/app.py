@@ -29,6 +29,7 @@ from analysis.fundamentals import get_fundamental_analysis, evaluate_metric_chec
 from analysis.swot import generate_swot
 from analysis.composite import compute_composite_score
 from analysis.orchestrator import build_full_analysis
+from analysis.political_network import build_political_network
 
 # Import backtesting engine
 from backtesting.engine import run_backtest
@@ -430,6 +431,35 @@ def full_analysis_endpoint():
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({'error': f'Full analysis failed for {ticker}: {str(e)}'}), 500
+
+
+@app.route('/api/political-network', methods=['GET'])
+def political_network_endpoint():
+    """
+    "Deeper dive" political network: what bills the company lobbies for, who
+    sponsors those bills, the company's named executives, what politicians
+    those executives personally donate to (FEC), and any possible overlaps
+    with the ticker's congressional stock-trading disclosures.
+
+    Not bundled into /api/full-analysis since it fans out to several more
+    slow public APIs (Senate LDA, Congress.gov, FEC) - call on demand.
+
+    Example: /api/political-network?ticker=AAPL
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    company_name = request.args.get('company_name', '')
+    if not company_name:
+        yahoo_data = scrape_yahoo_stock(ticker)
+        company_name = (yahoo_data.get('stock_data') or {}).get('company_name', ticker) if yahoo_data.get('success') else ticker
+
+    try:
+        return jsonify(build_political_network(ticker, company_name))
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'error': f'Political network lookup failed for {ticker}: {str(e)}'}), 500
 
 
 @app.route('/api/backtest/indicators', methods=['GET'])

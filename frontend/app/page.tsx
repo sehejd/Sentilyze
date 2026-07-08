@@ -11,6 +11,7 @@ import SwotPanel from "@/app/components/SwotPanel"
 import InsiderTradingPanel from "@/app/components/InsiderTradingPanel"
 import GeopoliticalPanel from "@/app/components/GeopoliticalPanel"
 import SocialTrendsPanel from "@/app/components/SocialTrendsPanel"
+import PoliticalNetworkPanel from "@/app/components/PoliticalNetworkPanel"
 import { ChevronDown, AlertCircle, LineChart } from "lucide-react"
 import { useState } from "react"
 import { StockData, SentimentAnalysisResponse, ComprehensiveAnalysisResponse, FullAnalysisResponse, ScraperSource } from "@/lib/api"
@@ -142,6 +143,8 @@ export default function Home() {
 								</div>
 
 								<SwotPanel swot={searchResult.swot} />
+
+								<PoliticalNetworkPanel ticker={searchResult.ticker} companyName={searchResult.company_name} />
 
 								<HeadlineList
 									rawData={searchResult.raw_data}

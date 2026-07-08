@@ -27,6 +27,13 @@ strategy ideas against real historical price data.
   polished into prose by Gemini if you have an API key).
 - **Composite "Sentilyze Score"**: a configurable weighted blend of every
   signal above, 0-100.
+- **Political network "deeper dive"**: what bills a company lobbies for
+  (Senate LDA filings), who sponsors those bills (Congress.gov), who the
+  company's named executives are (SEC filing-sourced officer data), and what
+  politicians those executives personally donate to (FEC). Cross-references
+  bill sponsors against the ticker's congressional stock-trading disclosures
+  and flags possible overlaps for manual verification. Loaded on demand from
+  the main dashboard since it fans out to several slower public APIs.
 - **Backtesting panel**: build entry/exit rules on technical indicators
   (SMA/EMA/RSI/MACD/Bollinger Bands/volume), add stop-loss/take-profit, and
   simulate against real historical daily price data, benchmarked vs buy & hold.
@@ -53,6 +60,13 @@ before using the fundamentals/filings endpoints.
 Optional: install `requirements-ml.txt` and set `USE_FINBERT=true` to swap the
 default VADER+TextBlob sentiment ensemble for a transformer-based FinBERT
 model (pulls in PyTorch, ~1GB+).
+
+For the political "deeper dive" (lobbying + bills + campaign finance), set
+`CONGRESS_GOV_API_KEY` (free signup) for bill titles/sponsors - without it,
+lobbied bill numbers still surface but without enrichment. FEC campaign
+finance lookups work out of the box against the public `DEMO_KEY`; set
+`FEC_API_KEY` (also free) for a higher rate limit. The Senate LDA lobbying
+API itself is public/keyless.
 
 ### Frontend Setup
 
@@ -86,6 +100,7 @@ analysis; the nav bar's chart icon links to `/backtest`.
 | `GET /api/insider?ticker=&days=` | Congressional (political) trading disclosures |
 | `GET /api/geopolitical?ticker=` | Geopolitical news exposure by theme |
 | `GET /api/social-trends?ticker=` | Reddit mention velocity + Google Trends interest |
+| `GET /api/political-network?ticker=` | Deeper dive: lobbying, bills, sponsors, executives, campaign contributions, cross-referenced connections |
 | `GET /api/yahoo`, `/api/reddit`, `/api/twitter` | Individual raw source data |
 | `GET /api/analyze?ticker=` | Legacy comprehensive endpoint (Yahoo/Reddit/Twitter only) |
 | `GET /api/backtest/indicators` | Metadata for the backtest rule builder |
@@ -123,14 +138,19 @@ backend/
 │   ├── sec_edgar.py           # SEC EDGAR fundamentals & filings
 │   ├── insider_trading.py     # Senate/House Stock Watcher
 │   ├── geopolitical.py        # GDELT Project
-│   └── social_trends.py       # Reddit velocity + Google Trends
+│   ├── social_trends.py       # Reddit velocity + Google Trends
+│   ├── lobbying.py            # Senate LDA lobbying disclosures + bill-reference extraction
+│   ├── congress_bills.py      # Congress.gov bill/sponsor lookup
+│   ├── company_officers.py    # Named executives (yfinance)
+│   └── political_contributions.py  # FEC individual campaign contributions
 ├── analysis/
 │   ├── ai_analyzer.py         # Original keyword-based analyzer + Gemini summary
 │   ├── ml_sentiment.py        # VADER+TextBlob ensemble (optional FinBERT)
 │   ├── fundamentals.py        # Fundamental scoring engine
 │   ├── swot.py                # SWOT generator
 │   ├── composite.py           # Weighted composite score
-│   └── orchestrator.py        # Fans out all sources in parallel, blends results
+│   ├── orchestrator.py        # Fans out all sources in parallel, blends results
+│   └── political_network.py   # Deeper-dive: lobbying + bills + executives + donations, cross-referenced
 ├── backtesting/
 │   ├── indicators.py          # SMA/EMA/RSI/MACD/Bollinger Bands
 │   └── engine.py              # Rule-based backtest simulator
@@ -140,7 +160,7 @@ backend/
 ### Frontend (Next.js + TypeScript)
 - **Components**: shadcn/ui + custom panels (`FundamentalsPanel`,
   `InsiderTradingPanel`, `GeopoliticalPanel`, `SocialTrendsPanel`, `SwotPanel`,
-  `CompositeScoreGauge`)
+  `CompositeScoreGauge`, `PoliticalNetworkPanel`)
 - **API Layer**: Axios-based client (`lib/api.ts`) with full TypeScript types
   for every endpoint
 - **Backtesting UI**: `/backtest` - rule builder + equity curve chart (recharts)
@@ -161,6 +181,14 @@ backend/
   (Senate + House), not corporate Form 4 executive trades.
 - Google Trends (via `pytrends`) is an unofficial scraper and may rate-limit;
   the app degrades gracefully (returns an error field) rather than crashing.
+- **Political network connections are heuristic name matches, not confirmed
+  links.** Bill sponsor names (Congress.gov), congressional trader names
+  (Stock Watcher), and donation recipient names (FEC) are formatted
+  differently across these sources, so `political_network.py` matches on
+  shared name tokens and flags results as "possible" - always verify manually
+  before drawing conclusions.
+- Bill titles/sponsors require a free `CONGRESS_GOV_API_KEY`; without it,
+  bill numbers referenced in lobbying filings still surface, just unenriched.
 
 ## 🎨 Color Scheme
 

@@ -4,8 +4,21 @@ yfinance==0.2.28
 requests==2.32.3
 beautifulsoup4==4.12.3
 pandas==2.2.2
+numpy>=1.26,<3
 textblob==0.18.0
 vaderSentiment==3.3.2
 praw==7.7.1
 python-dotenv==1.0.0
 google-generativeai==0.8.3
+
+# Social/search trend momentum (scraping/social_trends.py). Best-effort:
+# the app degrades gracefully if Google Trends rate-limits or this isn't installed.
+pytrends==4.9.2
+
+# Backtesting engine (backtesting/engine.py) needs pandas (above) for
+# indicator math - no extra dependency required.
+
+# Optional: transformer-based FinBERT sentiment (see analysis/ml_sentiment.py).
+# Not installed by default - it pulls in torch (~1GB+). Install separately with:
+#   pip install -r requirements-ml.txt
+# and set USE_FINBERT=true in .env to enable.

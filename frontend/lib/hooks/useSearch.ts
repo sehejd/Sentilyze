@@ -1,17 +1,18 @@
 import { useState, useCallback } from 'react';
-import { 
-  fetchFromScraper, 
-  ScraperSource, 
-  StockData, 
+import {
+  fetchFromScraper,
+  ScraperSource,
+  StockData,
   SentimentAnalysisResponse,
   ComprehensiveAnalysisResponse,
-  isValidTicker 
+  FullAnalysisResponse,
+  isValidTicker
 } from '@/lib/api';
 
 interface UseSearchResult {
   isLoading: boolean;
   error: string | null;
-  data: StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | null;
+  data: StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | FullAnalysisResponse | null;
   searchTicker: (ticker: string, source?: ScraperSource) => Promise<void>;
   clearResults: () => void;
 }
@@ -19,7 +20,7 @@ interface UseSearchResult {
 export const useSearch = (): UseSearchResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | null>(null);
+  const [data, setData] = useState<StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | FullAnalysisResponse | null>(null);
 
   const searchTicker = useCallback(async (
     ticker: string, 

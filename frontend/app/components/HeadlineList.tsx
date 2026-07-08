@@ -2,15 +2,12 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  ExternalLink, 
-  MessageSquare, 
+import {
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
   TrendingUp,
   Calendar,
-  User,
   Heart,
   Repeat
 } from "lucide-react";
@@ -65,7 +62,7 @@ interface HeadlineListProps {
   ticker: string;
 }
 
-export default function HeadlineList({ rawData, ticker }: HeadlineListProps) {
+export default function HeadlineList({ rawData }: HeadlineListProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     yahoo: true,
     reddit: false,

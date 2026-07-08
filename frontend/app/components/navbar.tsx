@@ -1,11 +1,14 @@
 import { Input } from "@/components/ui/input"
-import { Search, Home, User, Loader2 } from "lucide-react"
+import { Search, Home, User, Loader2, LineChart } from "lucide-react"
 import { useState, KeyboardEvent, useEffect } from "react"
+import Link from "next/link"
 import { useSearch } from "@/lib/hooks/useSearch"
-import { ScraperSource } from "@/lib/api"
+import { ScraperSource, StockData, SentimentAnalysisResponse, ComprehensiveAnalysisResponse, FullAnalysisResponse } from "@/lib/api"
+
+type SearchResultData = StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | FullAnalysisResponse;
 
 interface NavbarProps {
-  onSearchResult?: (data: any) => void;
+  onSearchResult?: (data: SearchResultData) => void;
   onLoadingChange?: (loading: boolean) => void;
   onError?: (error: string) => void;
   defaultSource?: ScraperSource;
@@ -82,7 +85,12 @@ export default function Navbar({
               SENTILYZE
             </h1>
             <div className="flex items-center space-x-4">
-              <Home className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
+              <Link href="/">
+                <Home className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
+              </Link>
+              <Link href="/backtest" title="Backtesting">
+                <LineChart className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
+              </Link>
               <User className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
             </div>
           </div>

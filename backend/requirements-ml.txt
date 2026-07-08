@@ -1,0 +1,10 @@
+# Optional heavy dependencies for transformer-based sentiment (FinBERT).
+# Install with: pip install -r requirements.txt -r requirements-ml.txt
+# Then set USE_FINBERT=true in backend/.env.
+#
+# This pulls in PyTorch (~1GB+ download) and downloads the ~400MB
+# ProsusAI/finbert model on first use. Only install this if you want more
+# accurate financial-domain sentiment than the default VADER+TextBlob
+# ensemble and have the disk space / bandwidth for it.
+transformers>=4.40,<5
+torch>=2.2,<3

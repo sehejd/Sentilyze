@@ -39,10 +39,10 @@ export interface ComprehensiveAnalysisResponse {
     summary?: string;
     analysis_timestamp?: string;
     confidence_score?: number;
-    source_analysis?: any;
-    key_insights?: any;
-    projections?: any;
-    data_quality?: any;
+    source_analysis?: Record<string, unknown>;
+    key_insights?: unknown;
+    projections?: unknown;
+    data_quality?: Record<string, unknown>;
   };
   raw_data: {
     yahoo_finance?: {
@@ -85,12 +85,285 @@ export interface ComprehensiveAnalysisResponse {
   api_version: string;
 }
 
+// ---- New: fundamentals, insider trading, geopolitical, social trends, SWOT, composite score, backtesting ----
+
+export interface FundamentalMetrics {
+  pe_ratio: number | null;
+  forward_pe: number | null;
+  peg_ratio: number | null;
+  price_to_book: number | null;
+  debt_to_equity: number | null;
+  current_ratio: number | null;
+  quick_ratio: number | null;
+  return_on_equity: number | null;
+  return_on_assets: number | null;
+  profit_margin: number | null;
+  operating_margin: number | null;
+  gross_margin: number | null;
+  revenue_growth: number | null;
+  earnings_growth: number | null;
+  dividend_yield: number | null;
+  beta: number | null;
+  market_cap: number | null;
+  free_cash_flow: number | null;
+  total_cash: number | null;
+  total_debt: number | null;
+}
+
+export interface FundamentalScoreBreakdown {
+  metric: string;
+  value: number | null;
+  score: number | null;
+  weight: number;
+}
+
+export interface FundamentalsResponse {
+  success: boolean;
+  ticker: string;
+  company_name: string;
+  sector?: string;
+  industry?: string;
+  metrics: FundamentalMetrics;
+  as_reported_sec_data?: Record<string, { latest_value: number; latest_period_end: string; latest_form: string }> | null;
+  scoring?: {
+    overall_score: number | null;
+    rating: 'strong' | 'good' | 'fair' | 'weak' | 'insufficient_data';
+    breakdown: FundamentalScoreBreakdown[];
+    data_coverage: string;
+  };
+  source: string;
+  error?: string;
+}
+
+export interface SecFiling {
+  form: string;
+  filing_date: string | null;
+  report_period: string | null;
+  accession_number: string;
+  document_url: string;
+  filing_index_url: string;
+}
+
+export interface SecFilingsResponse {
+  success: boolean;
+  ticker: string;
+  cik: string;
+  company_name: string;
+  sic_description?: string;
+  filings: SecFiling[];
+  error?: string;
+}
+
+export interface CongressionalTransaction {
+  chamber: 'Senate' | 'House';
+  member: string;
+  ticker: string;
+  transaction_type: string;
+  transaction_date: string;
+  amount_range: string;
+  amount: { low: number; high: number };
+  asset_description: string;
+}
+
+export interface InsiderTradingResponse {
+  success: boolean;
+  ticker: string;
+  transactions: CongressionalTransaction[];
+  total_found: number;
+  lookback_days: number;
+  aggregate: {
+    buy_dollars_mid_estimate: number;
+    sell_dollars_mid_estimate: number;
+    net_signal: number;
+    signal_label: 'net_buying' | 'net_selling' | 'mixed' | 'no_activity';
+    unique_members: number;
+  };
+  source: string;
+  error?: string;
+}
+
+export interface GeopoliticalArticle {
+  title: string;
+  url: string;
+  source: string;
+  published: string;
+  language: string;
+}
+
+export interface GeopoliticalResponse {
+  success: boolean;
+  ticker: string;
+  subject_searched: string;
+  themes: Record<string, GeopoliticalArticle[]>;
+  total_articles: number;
+  geopolitical_exposure: 'low' | 'moderate' | 'high';
+  partial_errors: string[];
+  source: string;
+  error?: string;
+}
+
+export interface SocialTrendsResponse {
+  ticker: string;
+  reddit_momentum: {
+    success: boolean;
+    mentions_today?: number;
+    mentions_trailing_week?: number;
+    trailing_week_daily_avg?: number;
+    velocity_ratio?: number;
+    momentum?: 'surging' | 'rising' | 'steady' | 'fading';
+    error?: string;
+  };
+  search_interest: {
+    success: boolean;
+    query_term?: string;
+    series?: Array<{ date: string; interest: number }>;
+    recent_week_avg_interest?: number;
+    trend_direction?: 'rising' | 'falling' | 'flat' | 'unknown';
+    note?: string;
+    error?: string;
+  };
+  timestamp: string;
+}
+
+export interface SwotResponse {
+  ticker: string;
+  swot: {
+    strengths: string[];
+    weaknesses: string[];
+    opportunities: string[];
+    threats: string[];
+  };
+  ai_narrative: string | null;
+}
+
+export interface CompositeScoreData {
+  score: number | null;
+  rating: 'strongly_bullish' | 'bullish' | 'neutral' | 'bearish' | 'strongly_bearish' | 'insufficient_data';
+  components: {
+    sentiment: number | null;
+    fundamentals: number | null;
+    insider: number | null;
+    geopolitical: number | null;
+    social_momentum: number | null;
+  };
+  weights_used: Record<string, number>;
+  disclaimer?: string;
+}
+
+export interface CompositeScoreResponse {
+  ticker: string;
+  composite_score: CompositeScoreData;
+  sentiment: { overall_label: string; overall_compound: number; n_sources: number };
+  timestamp: string;
+}
+
+export interface FullAnalysisResponse {
+  ticker: string;
+  company_name: string;
+  raw_data: ComprehensiveAnalysisResponse['raw_data'];
+  fundamentals: FundamentalsResponse;
+  insider_trading: InsiderTradingResponse;
+  geopolitical: GeopoliticalResponse;
+  social_trends: SocialTrendsResponse;
+  sentiment: {
+    by_source: Record<string, { overall_label: string; overall_compound: number; n: number }>;
+    blended: { overall_label: string; overall_compound: number; n_sources: number };
+  };
+  swot: SwotResponse;
+  composite_score: CompositeScoreData;
+  weights_used: Record<string, number>;
+  timestamp: string;
+  api_version: string;
+}
+
+export interface CompositeWeightOverrides {
+  sentiment?: number;
+  fundamentals?: number;
+  insider?: number;
+  geopolitical?: number;
+  social_momentum?: number;
+}
+
+// ---- Backtesting ----
+
+export interface BacktestRule {
+  field: string;
+  operator: '<' | '<=' | '>' | '>=' | '==' | 'crosses_above' | 'crosses_below';
+  value: number | string;
+}
+
+export interface FundamentalGateCheck {
+  metric: string;
+  operator: '<' | '<=' | '>' | '>=' | '==';
+  value: number;
+}
+
+export interface BacktestRequest {
+  ticker: string;
+  start: string;
+  end?: string;
+  entry_rules: BacktestRule[];
+  exit_rules: BacktestRule[];
+  initial_capital?: number;
+  position_size_pct?: number;
+  stop_loss_pct?: number;
+  take_profit_pct?: number;
+  fundamental_gate?: {
+    enabled: boolean;
+    checks: FundamentalGateCheck[];
+  };
+}
+
+export interface BacktestTrade {
+  action: 'buy' | 'sell';
+  date: string;
+  price: number;
+  shares: number;
+  cost?: number;
+  proceeds?: number;
+  reason?: string;
+  return_pct?: number;
+  entry_date?: string;
+  entry_price?: number;
+}
+
+export interface BacktestResponse {
+  success: boolean;
+  ticker: string;
+  period: { start: string; end: string; requested_start: string; requested_end?: string };
+  entry_gate: { passed: boolean; note: string | null };
+  initial_capital: number;
+  final_equity: number;
+  stats: {
+    total_return_pct: number;
+    cagr_pct: number;
+    max_drawdown_pct: number;
+    sharpe_ratio: number | null;
+    num_trades: number;
+    win_rate_pct: number | null;
+    buy_hold_return_pct: number;
+    alpha_vs_buy_hold_pct: number;
+  };
+  trades: BacktestTrade[];
+  equity_curve: Array<{ date: string; equity: number; close: number }>;
+  buy_hold_equity_curve: Array<{ date: string; equity: number }>;
+  fundamental_gate_limitation: string;
+  error?: string;
+}
+
+export interface BacktestIndicatorsResponse {
+  indicators: Record<string, { label: string; unit: string; range?: [number, number] }>;
+  operators: string[];
+  fundamental_metrics: Record<string, { direction: 'low' | 'high'; bands: [number, number, number] }>;
+}
+
 // Enum for different scraper sources
 export enum ScraperSource {
   YAHOO = 'yahoo',
   REDDIT = 'reddit',
   TWITTER = 'twitter',
-  ALL = 'analyze' // Changed to use the comprehensive analysis endpoint
+  ALL = 'analyze', // Legacy comprehensive analysis endpoint (Yahoo/Reddit/Twitter only)
+  FULL = 'full-analysis' // Full dashboard: adds fundamentals, insider, geopolitical, social trends, SWOT, composite score
 }
 
 // Create axios instance with default config
@@ -104,9 +377,9 @@ const apiClient = axios.create({
 
 // Generic function to fetch data from any scraper
 export const fetchFromScraper = async (
-  ticker: string, 
+  ticker: string,
   source: ScraperSource = ScraperSource.YAHOO
-): Promise<StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | null> => {
+): Promise<StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | FullAnalysisResponse | null> => {
   try {
     const endpoint = getEndpointForSource(source);
     const response = await apiClient.get(`${endpoint}?ticker=${ticker.toUpperCase()}`);
@@ -128,6 +401,8 @@ const getEndpointForSource = (source: ScraperSource): string => {
       return '/api/twitter';
     case ScraperSource.ALL:
       return '/api/analyze';
+    case ScraperSource.FULL:
+      return '/api/full-analysis';
     default:
       return '/api/yahoo';
   }
@@ -143,10 +418,71 @@ export const fetchRedditSentiment = (ticker: string): Promise<SentimentAnalysisR
 export const fetchTwitterSentiment = (ticker: string): Promise<SentimentAnalysisResponse | null> => 
   fetchFromScraper(ticker, ScraperSource.TWITTER) as Promise<SentimentAnalysisResponse | null>;
 
-export const fetchAllSentiment = (ticker: string): Promise<ComprehensiveAnalysisResponse | null> => 
+export const fetchAllSentiment = (ticker: string): Promise<ComprehensiveAnalysisResponse | null> =>
   fetchFromScraper(ticker, ScraperSource.ALL) as Promise<ComprehensiveAnalysisResponse | null>;
+
+export const fetchFullAnalysis = (ticker: string): Promise<FullAnalysisResponse | null> =>
+  fetchFromScraper(ticker, ScraperSource.FULL) as Promise<FullAnalysisResponse | null>;
 
 // Function to validate ticker format
 export const isValidTicker = (ticker: string): boolean => {
   return /^[A-Z]{1,5}$/.test(ticker.toUpperCase());
+};
+
+// ---- New dedicated endpoint fetchers ----
+
+export const fetchFundamentals = async (ticker: string): Promise<FundamentalsResponse> => {
+  const response = await apiClient.get(`/api/fundamentals?ticker=${ticker.toUpperCase()}`);
+  return response.data;
+};
+
+export const fetchSecFilings = async (ticker: string): Promise<SecFilingsResponse> => {
+  const response = await apiClient.get(`/api/sec/filings?ticker=${ticker.toUpperCase()}`);
+  return response.data;
+};
+
+export const fetchInsiderTrading = async (ticker: string, days = 365): Promise<InsiderTradingResponse> => {
+  const response = await apiClient.get(`/api/insider?ticker=${ticker.toUpperCase()}&days=${days}`);
+  return response.data;
+};
+
+export const fetchGeopolitical = async (ticker: string): Promise<GeopoliticalResponse> => {
+  const response = await apiClient.get(`/api/geopolitical?ticker=${ticker.toUpperCase()}`);
+  return response.data;
+};
+
+export const fetchSocialTrends = async (ticker: string): Promise<SocialTrendsResponse> => {
+  const response = await apiClient.get(`/api/social-trends?ticker=${ticker.toUpperCase()}`);
+  return response.data;
+};
+
+export const fetchSwot = async (ticker: string): Promise<SwotResponse> => {
+  const response = await apiClient.get(`/api/swot?ticker=${ticker.toUpperCase()}`);
+  return response.data;
+};
+
+export const fetchCompositeScore = async (
+  ticker: string,
+  weights?: CompositeWeightOverrides
+): Promise<CompositeScoreResponse> => {
+  const params = new URLSearchParams({ ticker: ticker.toUpperCase() });
+  if (weights) {
+    if (weights.sentiment !== undefined) params.set('w_sentiment', String(weights.sentiment));
+    if (weights.fundamentals !== undefined) params.set('w_fundamentals', String(weights.fundamentals));
+    if (weights.insider !== undefined) params.set('w_insider', String(weights.insider));
+    if (weights.geopolitical !== undefined) params.set('w_geopolitical', String(weights.geopolitical));
+    if (weights.social_momentum !== undefined) params.set('w_social_momentum', String(weights.social_momentum));
+  }
+  const response = await apiClient.get(`/api/composite?${params.toString()}`);
+  return response.data;
+};
+
+export const fetchBacktestIndicators = async (): Promise<BacktestIndicatorsResponse> => {
+  const response = await apiClient.get('/api/backtest/indicators');
+  return response.data;
+};
+
+export const runBacktest = async (request: BacktestRequest): Promise<BacktestResponse> => {
+  const response = await apiClient.post('/api/backtest', request);
+  return response.data;
 };

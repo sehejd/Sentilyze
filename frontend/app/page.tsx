@@ -1,21 +1,28 @@
 "use client"
 
+import Link from "next/link"
 import Navbar from "@/app/components/navbar"
 import StockSummary from "@/app/components/StockSummary"
 import HeadlineList from "@/app/components/HeadlineList"
 import LoadingSpinner from "@/app/components/LoadingSpinner"
-import { ChevronDown, AlertCircle } from "lucide-react"
+import CompositeScoreGauge from "@/app/components/CompositeScoreGauge"
+import FundamentalsPanel from "@/app/components/FundamentalsPanel"
+import SwotPanel from "@/app/components/SwotPanel"
+import InsiderTradingPanel from "@/app/components/InsiderTradingPanel"
+import GeopoliticalPanel from "@/app/components/GeopoliticalPanel"
+import SocialTrendsPanel from "@/app/components/SocialTrendsPanel"
+import { ChevronDown, AlertCircle, LineChart } from "lucide-react"
 import { useState } from "react"
-import { StockData, SentimentAnalysisResponse, ComprehensiveAnalysisResponse, ScraperSource } from "@/lib/api"
+import { StockData, SentimentAnalysisResponse, ComprehensiveAnalysisResponse, FullAnalysisResponse, ScraperSource } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function Home() {
-	const [searchResult, setSearchResult] = useState<StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | null>(null);
+	const [searchResult, setSearchResult] = useState<StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | FullAnalysisResponse | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	// Handle search results from navbar
-	const handleSearchResult = (data: StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse) => {
+	const handleSearchResult = (data: StockData | SentimentAnalysisResponse | ComprehensiveAnalysisResponse | FullAnalysisResponse) => {
 		setSearchResult(data);
 		setError(null);
 		// Scroll to results section
@@ -49,18 +56,19 @@ export default function Home() {
 		}
 	};
 
-	// Check if we have comprehensive analysis data
-	const isComprehensiveAnalysis = searchResult && 'analysis' in searchResult;
+	// Check which shape of result we have
+	const isFullAnalysis = searchResult && 'composite_score' in searchResult;
+	const isComprehensiveAnalysis = searchResult && !isFullAnalysis && 'analysis' in searchResult;
 
 	return (
 		<div className="min-h-screen bg-light">
-			<Navbar 
-				onSearchResult={handleSearchResult} 
+			<Navbar
+				onSearchResult={handleSearchResult}
 				onLoadingChange={handleLoadingChange}
 				onError={handleError}
-				defaultSource={ScraperSource.ALL} 
+				defaultSource={ScraperSource.FULL}
 			/>
-			
+
 			{/* Full Page Hero Section */}
 			<div className="min-h-screen flex flex-col justify-center items-center relative px-6">
 				<div className="text-left mb-16 w-full max-w-6xl">
@@ -68,11 +76,18 @@ export default function Home() {
 						The real-time stock<br />
 						sentiment engine.
 					</h1>
-					<p className="text-grayish max-w-lg font-mono text-lg mb-16">
-						Real-time market sentiment from news & social media powered by AI
+					<p className="text-grayish max-w-lg font-mono text-lg mb-8">
+						Sentiment, fundamentals, insider activity, geopolitics & social momentum, blended into one score
 					</p>
+					<Link
+						href="/backtest"
+						className="inline-flex items-center gap-2 text-sm font-mono text-dark border border-beige rounded-full px-4 py-2 hover:bg-white transition-colors"
+					>
+						<LineChart className="w-4 h-4" />
+						Try the backtesting panel
+					</Link>
 				</div>
-				
+
 				{/* Scroll indicator */}
 				<div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce">
 					<span className="text-xs font-mono uppercase tracking-wider text-grayish mb-2">
@@ -102,22 +117,55 @@ export default function Home() {
 							</div>
 						)}
 
-						{/* Comprehensive Analysis Results */}
+						{/* Full Analysis Results (fundamentals, insider, geopolitical, social, SWOT, composite score) */}
+						{isFullAnalysis && !isLoading && (
+							<div className="w-full max-w-6xl mx-auto space-y-4">
+								<div className="flex items-center justify-between flex-wrap gap-3">
+									<div>
+										<h2 className="text-2xl font-bold text-dark">
+											{searchResult.company_name} (${searchResult.ticker})
+										</h2>
+										<p className="text-sm text-grayish">
+											Blended sentiment: <span className="font-medium text-dark capitalize">{searchResult.sentiment.blended.overall_label}</span>
+											{' '}({searchResult.sentiment.blended.n_sources} source{searchResult.sentiment.blended.n_sources === 1 ? '' : 's'})
+										</p>
+									</div>
+								</div>
+
+								<CompositeScoreGauge composite={searchResult.composite_score} />
+
+								<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+									<FundamentalsPanel fundamentals={searchResult.fundamentals} />
+									<InsiderTradingPanel insider={searchResult.insider_trading} />
+									<GeopoliticalPanel geopolitical={searchResult.geopolitical} />
+									<SocialTrendsPanel social={searchResult.social_trends} />
+								</div>
+
+								<SwotPanel swot={searchResult.swot} />
+
+								<HeadlineList
+									rawData={searchResult.raw_data}
+									ticker={searchResult.ticker}
+								/>
+							</div>
+						)}
+
+						{/* Comprehensive Analysis Results (legacy /api/analyze) */}
 						{isComprehensiveAnalysis && !isLoading && (
 							<div className="space-y-6">
-								<StockSummary 
-									ticker={searchResult.ticker} 
-									analysis={searchResult.analysis} 
+								<StockSummary
+									ticker={searchResult.ticker}
+									analysis={searchResult.analysis}
 								/>
-								<HeadlineList 
-									rawData={searchResult.raw_data} 
-									ticker={searchResult.ticker} 
+								<HeadlineList
+									rawData={searchResult.raw_data}
+									ticker={searchResult.ticker}
 								/>
 							</div>
 						)}
 
 						{/* Legacy Simple Results (fallback) */}
-						{searchResult && !isComprehensiveAnalysis && !isLoading && (
+						{searchResult && !isComprehensiveAnalysis && !isFullAnalysis && !isLoading && (
 							<div className="w-full max-w-4xl mx-auto">
 								{/* Stock Data Display */}
 								{'current_price' in searchResult && (

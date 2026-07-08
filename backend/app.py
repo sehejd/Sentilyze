@@ -18,9 +18,21 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from scraping.yahoo import scrape_yahoo_stock, get_stock_data
 from scraping.reddit import scrape_reddit_stock
 from scraping.twitter import scrape_twitter_stock
+from scraping.sec_edgar import get_recent_filings
+from scraping.insider_trading import get_congressional_trades
+from scraping.geopolitical import get_geopolitical_context
+from scraping.social_trends import get_social_trends
 
 # Import AI analyzer
 from analysis.ai_analyzer import AIStockAnalyzer
+from analysis.fundamentals import get_fundamental_analysis, evaluate_metric_checks, get_fundamentals
+from analysis.swot import generate_swot
+from analysis.composite import compute_composite_score
+from analysis.orchestrator import build_full_analysis
+
+# Import backtesting engine
+from backtesting.engine import run_backtest
+from backtesting.indicators import AVAILABLE_INDICATORS, OPERATORS
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -243,6 +255,265 @@ def sentiment_analysis_endpoint():
         return jsonify({'error': f'Sentiment analysis failed: {str(e)}'}), 500
 
 
+@app.route('/api/fundamentals', methods=['GET'])
+def fundamentals_endpoint():
+    """
+    Fundamental analysis with a 0-100 score against configurable thresholds.
+    Example: /api/fundamentals?ticker=AAPL
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    try:
+        result = get_fundamental_analysis(ticker)
+        if result.get('success'):
+            return jsonify(result)
+        return jsonify({'error': result.get('error', 'Unknown error')}), 404
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
+@app.route('/api/sec/filings', methods=['GET'])
+def sec_filings_endpoint():
+    """
+    Recent 10-Q/10-K quarterly & annual report metadata from SEC EDGAR.
+    Example: /api/sec/filings?ticker=AAPL
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    try:
+        result = get_recent_filings(ticker)
+        if result.get('success'):
+            return jsonify(result)
+        return jsonify({'error': result.get('error', 'Unknown error')}), 404
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
+@app.route('/api/insider', methods=['GET'])
+def insider_endpoint():
+    """
+    Congressional (political) stock trading disclosures for a ticker.
+    Example: /api/insider?ticker=AAPL&days=365
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    days_back = request.args.get('days', 365, type=int)
+
+    try:
+        result = get_congressional_trades(ticker, days_back=days_back)
+        if result.get('success'):
+            return jsonify(result)
+        return jsonify({'error': result.get('error', 'Unknown error')}), 404
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
+@app.route('/api/geopolitical', methods=['GET'])
+def geopolitical_endpoint():
+    """
+    Geopolitical news exposure (trade policy, sanctions, conflict, elections,
+    monetary policy, supply chain) for a ticker via the GDELT Project.
+    Example: /api/geopolitical?ticker=AAPL
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    company_name = request.args.get('company_name', '')
+
+    try:
+        result = get_geopolitical_context(ticker, company_name)
+        if result.get('success'):
+            return jsonify(result)
+        return jsonify({'error': result.get('error', 'Unknown error')}), 404
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
+@app.route('/api/social-trends', methods=['GET'])
+def social_trends_endpoint():
+    """
+    Social/search momentum: Reddit mention velocity + Google Trends interest.
+    Example: /api/social-trends?ticker=AAPL
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    company_name = request.args.get('company_name', '')
+
+    try:
+        return jsonify(get_social_trends(ticker, company_name))
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
+@app.route('/api/swot', methods=['GET'])
+def swot_endpoint():
+    """
+    Full SWOT analysis assembled from fundamentals, blended sentiment,
+    insider trading, geopolitical exposure, and social momentum.
+    Example: /api/swot?ticker=AAPL
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    try:
+        full = build_full_analysis(ticker)
+        return jsonify(full['swot'])
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
+@app.route('/api/composite', methods=['GET'])
+def composite_endpoint():
+    """
+    Weighted composite "Sentilyze Score" (0-100) combining sentiment,
+    fundamentals, insider trading, geopolitical exposure, and social momentum.
+    Override default weights with query params, e.g.
+    /api/composite?ticker=AAPL&w_sentiment=0.4&w_fundamentals=0.4&w_insider=0.1&w_geopolitical=0.05&w_social_momentum=0.05
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    weight_overrides = {}
+    for key, param in [('sentiment', 'w_sentiment'), ('fundamentals', 'w_fundamentals'),
+                        ('insider', 'w_insider'), ('geopolitical', 'w_geopolitical'),
+                        ('social_momentum', 'w_social_momentum')]:
+        value = request.args.get(param, type=float)
+        if value is not None:
+            weight_overrides[key] = value
+
+    try:
+        full = build_full_analysis(ticker, weights=weight_overrides or None)
+        return jsonify({
+            'ticker': full['ticker'],
+            'composite_score': full['composite_score'],
+            'sentiment': full['sentiment']['blended'],
+            'timestamp': full['timestamp'],
+        })
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
+@app.route('/api/full-analysis', methods=['GET'])
+def full_analysis_endpoint():
+    """
+    Comprehensive dashboard endpoint: Yahoo/Reddit/Twitter + fundamentals +
+    insider trading + geopolitical exposure + social momentum + ML sentiment
+    + SWOT + composite score, all in one call. This is what the main
+    frontend dashboard uses.
+    Example: /api/full-analysis?ticker=AAPL
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    weight_overrides = {}
+    for key, param in [('sentiment', 'w_sentiment'), ('fundamentals', 'w_fundamentals'),
+                        ('insider', 'w_insider'), ('geopolitical', 'w_geopolitical'),
+                        ('social_momentum', 'w_social_momentum')]:
+        value = request.args.get(param, type=float)
+        if value is not None:
+            weight_overrides[key] = value
+
+    try:
+        return jsonify(build_full_analysis(ticker, weights=weight_overrides or None))
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'error': f'Full analysis failed for {ticker}: {str(e)}'}), 500
+
+
+@app.route('/api/backtest/indicators', methods=['GET'])
+def backtest_indicators_endpoint():
+    """Metadata for the backtest rule builder: available indicator fields, operators, and default fundamental thresholds."""
+    from analysis.fundamentals import DEFAULT_THRESHOLDS
+    return jsonify({
+        'indicators': AVAILABLE_INDICATORS,
+        'operators': OPERATORS,
+        'fundamental_metrics': {
+            name: {'direction': cfg['direction'], 'bands': cfg['bands']}
+            for name, cfg in DEFAULT_THRESHOLDS.items()
+        },
+    })
+
+
+@app.route('/api/backtest', methods=['POST'])
+def backtest_endpoint():
+    """
+    Run a rule-based backtest over historical price data.
+
+    Body:
+    {
+      "ticker": "AAPL",
+      "start": "2022-01-01",
+      "end": "2024-01-01",              // optional, defaults to latest
+      "entry_rules": [{"field": "rsi_14", "operator": "<", "value": 30}],
+      "exit_rules": [{"field": "rsi_14", "operator": ">", "value": 70}],
+      "initial_capital": 10000,          // optional, default 10000
+      "position_size_pct": 1.0,          // optional, fraction of cash per trade, default 1.0
+      "stop_loss_pct": 10,               // optional
+      "take_profit_pct": 20,             // optional
+      "fundamental_gate": {              // optional static fundamental filter
+        "enabled": true,
+        "checks": [{"metric": "pe_ratio", "operator": "<", "value": 25}]
+      }
+    }
+    """
+    body = request.get_json(silent=True) or {}
+    ticker = body.get('ticker')
+    start = body.get('start')
+
+    if not ticker or not start:
+        return jsonify({'error': 'ticker and start are required'}), 400
+
+    entry_gate_passed = True
+    entry_gate_note = None
+
+    fundamental_gate = body.get('fundamental_gate') or {}
+    if fundamental_gate.get('enabled') and fundamental_gate.get('checks'):
+        fundamentals = get_fundamentals(ticker)
+        if not fundamentals.get('success'):
+            entry_gate_passed = False
+            entry_gate_note = f"Fundamental gate failed: could not fetch fundamentals ({fundamentals.get('error')})"
+        else:
+            gate_result = evaluate_metric_checks(fundamentals['metrics'], fundamental_gate['checks'])
+            entry_gate_passed = gate_result['passed']
+            entry_gate_note = (
+                f"Static fundamental gate evaluated against current data: "
+                f"{'passed' if entry_gate_passed else 'failed'} ({gate_result['checks']})"
+            )
+
+    try:
+        result = run_backtest(
+            ticker=ticker,
+            start=start,
+            end=body.get('end'),
+            entry_rules=body.get('entry_rules', []),
+            exit_rules=body.get('exit_rules', []),
+            initial_capital=float(body.get('initial_capital', 10000)),
+            position_size_pct=float(body.get('position_size_pct', 1.0)),
+            stop_loss_pct=body.get('stop_loss_pct'),
+            take_profit_pct=body.get('take_profit_pct'),
+            entry_gate_passed=entry_gate_passed,
+            entry_gate_note=entry_gate_note,
+        )
+        return jsonify(result)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'error': f'Backtest failed: {str(e)}'}), 500
+
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint with system status."""
@@ -275,11 +546,19 @@ def health_check():
             'status': 'healthy',
             'message': 'Sentilyze API is running',
             'modules': test_results,
-            'version': '2.0',
+            'version': '3.0',
             'features': [
                 'Yahoo Finance scraping',
-                'Reddit sentiment analysis', 
+                'Reddit sentiment analysis',
                 'Twitter sentiment analysis',
+                'ML sentiment ensemble (VADER + TextBlob, optional FinBERT)',
+                'SEC EDGAR fundamentals & quarterly/annual filings',
+                'Congressional (political) insider trading signal',
+                'Geopolitical risk exposure (GDELT)',
+                'Social/search momentum (Reddit velocity + Google Trends)',
+                'SWOT analysis generator',
+                'Composite Sentilyze Score',
+                'Rule-based backtesting engine',
                 'AI-powered comprehensive analysis'
             ]
         })

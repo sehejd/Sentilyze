@@ -94,6 +94,39 @@ npm run dev
 Open `http://localhost:3000`. The main page runs the full multi-source
 analysis; the nav bar's chart icon links to `/backtest`.
 
+### Troubleshooting: "the site is static / nothing loads"
+
+Both servers have to be running at once - `python app.py` (backend, port
+8000) in one terminal and `npm run dev` (frontend, port 3000) in another.
+If every panel looks empty/static and the political web graph never
+appears, the frontend almost certainly can't reach the backend. Check, in
+order:
+
+1. **Is the backend actually still running?** `python app.py` should print
+   `Running on http://0.0.0.0:8000` and stay running - if it printed a
+   traceback and exited, that's the bug (paste the traceback).
+2. **Browser DevTools → Network tab** while loading the page: do requests to
+   `localhost:8000/api/...` appear at all?
+   - No requests show up → a frontend JS error is likely preventing the
+     fetch from firing at all; check the **Console** tab for a red error.
+   - Requests show up but fail to connect (`ERR_CONNECTION_REFUSED`) → the
+     backend isn't running or is on a different port.
+   - Requests return **500** → the backend hit an error processing a real
+     API response; check the backend terminal for a traceback.
+   - Requests just hang / never resolve → likely a slow real upstream API
+     (see below), not a bug - most panels load in a few seconds, but
+     `/api/political-web` and `/api/peer-performance` fan out to several
+     public APIs sequentially and can legitimately take 30s-2min depending
+     on the caps you set.
+3. **`NEXT_PUBLIC_API_URL`** - the frontend defaults to `http://localhost:8000`
+   if unset, which matches the backend's default port. Only set this env var
+   if you changed the backend's port.
+4. As of this version, an unexpected error in one panel (e.g. a real API
+   response shaped differently than expected) shows a visible "failed to
+   render" message in that panel instead of silently blanking the page -
+   if you still see a fully blank/static page with no error message
+   anywhere, that's itself informative (check the Console tab).
+
 ## 🎯 Usage
 
 1. Enter a ticker on the home page to see the composite score, fundamentals,

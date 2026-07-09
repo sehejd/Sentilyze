@@ -12,6 +12,7 @@ import InsiderTradingPanel from "@/app/components/InsiderTradingPanel"
 import GeopoliticalPanel from "@/app/components/GeopoliticalPanel"
 import SocialTrendsPanel from "@/app/components/SocialTrendsPanel"
 import PoliticalNetworkPanel from "@/app/components/PoliticalNetworkPanel"
+import ErrorBoundary from "@/app/components/ErrorBoundary"
 import { ChevronDown, AlertCircle, LineChart } from "lucide-react"
 import { useState } from "react"
 import { StockData, SentimentAnalysisResponse, ComprehensiveAnalysisResponse, FullAnalysisResponse, ScraperSource } from "@/lib/api"
@@ -133,23 +134,31 @@ export default function Home() {
 									</div>
 								</div>
 
-								<CompositeScoreGauge composite={searchResult.composite_score} />
+								<ErrorBoundary label="Composite score">
+									<CompositeScoreGauge composite={searchResult.composite_score} />
+								</ErrorBoundary>
 
 								<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-									<FundamentalsPanel fundamentals={searchResult.fundamentals} />
-									<InsiderTradingPanel insider={searchResult.insider_trading} />
-									<GeopoliticalPanel geopolitical={searchResult.geopolitical} />
-									<SocialTrendsPanel social={searchResult.social_trends} />
+									<ErrorBoundary label="Fundamentals"><FundamentalsPanel fundamentals={searchResult.fundamentals} /></ErrorBoundary>
+									<ErrorBoundary label="Insider trading"><InsiderTradingPanel insider={searchResult.insider_trading} /></ErrorBoundary>
+									<ErrorBoundary label="Geopolitical"><GeopoliticalPanel geopolitical={searchResult.geopolitical} /></ErrorBoundary>
+									<ErrorBoundary label="Social trends"><SocialTrendsPanel social={searchResult.social_trends} /></ErrorBoundary>
 								</div>
 
-								<SwotPanel swot={searchResult.swot} />
+								<ErrorBoundary label="SWOT analysis">
+									<SwotPanel swot={searchResult.swot} />
+								</ErrorBoundary>
 
-								<PoliticalNetworkPanel ticker={searchResult.ticker} companyName={searchResult.company_name} />
+								<ErrorBoundary label="Political network deeper dive">
+									<PoliticalNetworkPanel ticker={searchResult.ticker} companyName={searchResult.company_name} />
+								</ErrorBoundary>
 
-								<HeadlineList
-									rawData={searchResult.raw_data}
-									ticker={searchResult.ticker}
-								/>
+								<ErrorBoundary label="Headlines">
+									<HeadlineList
+										rawData={searchResult.raw_data}
+										ticker={searchResult.ticker}
+									/>
+								</ErrorBoundary>
 							</div>
 						)}
 

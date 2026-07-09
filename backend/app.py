@@ -30,6 +30,7 @@ from analysis.swot import generate_swot
 from analysis.composite import compute_composite_score
 from analysis.orchestrator import build_full_analysis
 from analysis.political_network import build_political_network
+from analysis.political_web import build_political_web
 
 # Import backtesting engine
 from backtesting.engine import run_backtest
@@ -460,6 +461,42 @@ def political_network_endpoint():
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({'error': f'Political network lookup failed for {ticker}: {str(e)}'}), 500
+
+
+@app.route('/api/political-web', methods=['GET'])
+def political_web_endpoint():
+    """
+    Multi-company political network graph: every disclosed politician<->
+    company congressional trading relationship (the full public STOCK Act
+    dataset), optionally enriched with lobbying/bill-sponsor and executive-
+    donation edges for the most active companies.
+
+    Query params (all optional):
+      days_back              lookback window for trading data, default 730
+      max_trading_edges      cap on politician<->company trading edges, default 150
+      max_lobbying_companies cap on companies enriched with lobbying/bills, default 20 (0 disables)
+      max_donation_companies cap on companies enriched with exec donations, default 0 (opt-in, slowest tier)
+
+    Example: /api/political-web?max_lobbying_companies=15&max_donation_companies=5
+    """
+    days_back = request.args.get('days_back', 730, type=int)
+    max_trading_edges = request.args.get('max_trading_edges', 150, type=int)
+    max_lobbying_companies = request.args.get('max_lobbying_companies', 20, type=int)
+    max_donation_companies = request.args.get('max_donation_companies', 0, type=int)
+
+    try:
+        result = build_political_web(
+            days_back=days_back,
+            max_trading_edges=max_trading_edges,
+            max_lobbying_companies=max_lobbying_companies,
+            max_donation_companies=max_donation_companies,
+        )
+        if not result.get('success'):
+            return jsonify({'error': result.get('error', 'Unknown error')}), 502
+        return jsonify(result)
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'error': f'Political web build failed: {str(e)}'}), 500
 
 
 @app.route('/api/backtest/indicators', methods=['GET'])

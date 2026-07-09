@@ -487,6 +487,59 @@ export interface PoliticalNetworkResponse {
   disclaimer: string;
 }
 
+// ---- Multi-company political web graph ----
+
+export type PoliticalWebNodeType = 'politician' | 'company' | 'bill' | 'executive';
+export type PoliticalWebEdgeType = 'trades' | 'lobbies_for' | 'sponsored_by' | 'works_at' | 'donated_to';
+
+export interface PoliticalWebNode {
+  id: string;
+  type: PoliticalWebNodeType;
+  label: string;
+  chamber?: string;
+  party?: string;
+  state?: string;
+  ticker?: string;
+  title?: string;
+  url?: string;
+}
+
+export interface PoliticalWebEdge {
+  source: string;
+  target: string;
+  type: PoliticalWebEdgeType;
+  weight: number;
+  direction?: 'net_buying' | 'net_selling' | 'mixed';
+  last_date?: string;
+  amount?: number;
+  date?: string;
+}
+
+export interface PoliticalWebResponse {
+  success: boolean;
+  nodes: PoliticalWebNode[];
+  edges: PoliticalWebEdge[];
+  stats: {
+    total_nodes: number;
+    total_edges: number;
+    node_counts: Record<string, number>;
+    dataset_totals: { total_transactions: number; unique_members: number; unique_tickers: number };
+    total_disclosed_trading_pairs: number;
+  };
+  caps_applied: Record<string, number>;
+  congress_gov_configured: boolean;
+  timestamp: string;
+  disclaimer: string;
+  error?: string;
+}
+
+export interface PoliticalWebParams {
+  days_back?: number;
+  max_trading_edges?: number;
+  max_lobbying_companies?: number;
+  max_donation_companies?: number;
+}
+
 // Enum for different scraper sources
 export enum ScraperSource {
   YAHOO = 'yahoo',
@@ -624,5 +677,15 @@ export const fetchPoliticalNetwork = async (
   const params = new URLSearchParams({ ticker: ticker.toUpperCase() });
   if (companyName) params.set('company_name', companyName);
   const response = await apiClient.get(`/api/political-network?${params.toString()}`);
+  return response.data;
+};
+
+export const fetchPoliticalWeb = async (params: PoliticalWebParams = {}): Promise<PoliticalWebResponse> => {
+  const query = new URLSearchParams();
+  if (params.days_back !== undefined) query.set('days_back', String(params.days_back));
+  if (params.max_trading_edges !== undefined) query.set('max_trading_edges', String(params.max_trading_edges));
+  if (params.max_lobbying_companies !== undefined) query.set('max_lobbying_companies', String(params.max_lobbying_companies));
+  if (params.max_donation_companies !== undefined) query.set('max_donation_companies', String(params.max_donation_companies));
+  const response = await apiClient.get(`/api/political-web?${query.toString()}`, { timeout: 120000 });
   return response.data;
 };

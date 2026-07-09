@@ -162,6 +162,76 @@ def get_congressional_trades(ticker: str, days_back: int = 365) -> Dict[str, Any
     }
 
 
+def get_all_congressional_trades(days_back: int = 730) -> Dict[str, Any]:
+    """
+    Fetch the *entire* Senate + House trading disclosure dataset (all
+    politicians, all tickers), not filtered to a single ticker. This is the
+    base layer for the political web graph (analysis/political_web.py) -
+    every disclosed politician<->company trading relationship in the window.
+    """
+    cutoff = datetime.now() - timedelta(days=days_back)
+
+    try:
+        senate_raw = _fetch_json(SENATE_URL, 'senate_stock_watcher_all')
+        house_raw = _fetch_json(HOUSE_URL, 'house_stock_watcher_all')
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f"Error fetching congressional trading data: {str(e)}",
+            'source': 'Senate/House Stock Watcher',
+        }
+
+    transactions = []
+
+    for row in senate_raw or []:
+        ticker = _normalize_ticker(row.get('ticker', ''))
+        if not ticker or ticker in ('N/A', '--'):
+            continue
+        try:
+            tx_date = datetime.strptime(row.get('transaction_date', ''), '%m/%d/%Y')
+        except ValueError:
+            continue
+        if tx_date < cutoff:
+            continue
+        transactions.append({
+            'chamber': 'Senate',
+            'member': row.get('senator', 'Unknown'),
+            'ticker': ticker,
+            'transaction_type': row.get('type', 'Unknown'),
+            'transaction_date': tx_date.isoformat(),
+            'amount': _parse_amount_range(row.get('amount', '')),
+        })
+
+    for row in house_raw or []:
+        ticker = _normalize_ticker(row.get('ticker', ''))
+        if not ticker or ticker in ('N/A', '--'):
+            continue
+        try:
+            tx_date = datetime.strptime(row.get('transaction_date', ''), '%Y-%m-%d')
+        except ValueError:
+            continue
+        if tx_date < cutoff:
+            continue
+        transactions.append({
+            'chamber': 'House',
+            'member': f"{row.get('representative', 'Unknown')}",
+            'ticker': ticker,
+            'transaction_type': row.get('type', 'Unknown'),
+            'transaction_date': tx_date.isoformat(),
+            'amount': _parse_amount_range(row.get('amount', '')),
+        })
+
+    return {
+        'success': True,
+        'transactions': transactions,
+        'total_found': len(transactions),
+        'lookback_days': days_back,
+        'unique_members': len({t['member'] for t in transactions}),
+        'unique_tickers': len({t['ticker'] for t in transactions}),
+        'source': 'Senate/House Stock Watcher (STOCK Act disclosures)',
+    }
+
+
 if __name__ == "__main__":
     test_ticker = "AAPL"
     print(f"Testing congressional trading scraper for {test_ticker}...")

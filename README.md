@@ -37,6 +37,11 @@ strategy ideas against real historical price data.
 - **Backtesting panel**: build entry/exit rules on technical indicators
   (SMA/EMA/RSI/MACD/Bollinger Bands/volume), add stop-loss/take-profit, and
   simulate against real historical daily price data, benchmarked vs buy & hold.
+- **Political Web**: an interactive graph, not scoped to one ticker - the base
+  layer plots the *entire* public STOCK Act dataset (every politician, every
+  company they've disclosed trading), then layers in lobbying/bill-sponsor and
+  executive-donation edges for the most active companies. Drag, zoom, click any
+  node to see its connections. See `/political-web`.
 
 ## 🚀 Quick Start
 
@@ -101,6 +106,7 @@ analysis; the nav bar's chart icon links to `/backtest`.
 | `GET /api/geopolitical?ticker=` | Geopolitical news exposure by theme |
 | `GET /api/social-trends?ticker=` | Reddit mention velocity + Google Trends interest |
 | `GET /api/political-network?ticker=` | Deeper dive: lobbying, bills, sponsors, executives, campaign contributions, cross-referenced connections |
+| `GET /api/political-web?days_back=&max_trading_edges=&max_lobbying_companies=&max_donation_companies=` | Multi-company politician↔company network graph |
 | `GET /api/yahoo`, `/api/reddit`, `/api/twitter` | Individual raw source data |
 | `GET /api/analyze?ticker=` | Legacy comprehensive endpoint (Yahoo/Reddit/Twitter only) |
 | `GET /api/backtest/indicators` | Metadata for the backtest rule builder |
@@ -150,11 +156,14 @@ backend/
 │   ├── swot.py                # SWOT generator
 │   ├── composite.py           # Weighted composite score
 │   ├── orchestrator.py        # Fans out all sources in parallel, blends results
-│   └── political_network.py   # Deeper-dive: lobbying + bills + executives + donations, cross-referenced
+│   ├── political_network.py   # Per-ticker deeper-dive: lobbying + bills + executives + donations
+│   └── political_web.py       # Multi-company graph: full trading dataset + bounded lobbying/donation enrichment
 ├── backtesting/
 │   ├── indicators.py          # SMA/EMA/RSI/MACD/Bollinger Bands
 │   └── engine.py              # Rule-based backtest simulator
-└── utils/cache.py             # Disk cache for slow/rate-limited public datasets
+└── utils/
+    ├── cache.py                # Disk cache for slow/rate-limited public datasets
+    └── political.py            # Shared name-matching helpers (political_network.py + political_web.py)
 ```
 
 ### Frontend (Next.js + TypeScript)
@@ -165,6 +174,9 @@ backend/
   for every endpoint
 - **Backtesting UI**: `/backtest` - rule builder + equity curve chart (recharts)
   + trade log
+- **Political Web UI**: `/political-web` - custom force-directed graph
+  (`lib/graphLayout.ts`, `d3-force` for physics + plain SVG rendering),
+  draggable/zoomable/pannable, click a node for its connections
 
 ## ⚠️ Known limitations (by design, given free data sources)
 
@@ -189,6 +201,16 @@ backend/
   before drawing conclusions.
 - Bill titles/sponsors require a free `CONGRESS_GOV_API_KEY`; without it,
   bill numbers referenced in lobbying filings still surface, just unenriched.
+- **The Political Web's "as many as possible" is bounded, and the bounds are
+  returned in `caps_applied` rather than being a silent limit.** The base
+  politician↔company trading layer genuinely covers the entire public STOCK
+  Act dataset - that part isn't capped. Lobbying/bill-sponsor and executive-
+  donation enrichment *is* capped (`max_lobbying_companies`,
+  `max_donation_companies`) because those are real per-company/per-person
+  calls against free public APIs (Senate LDA, Congress.gov, FEC); enriching
+  every company in the trading dataset would take far too long and produce an
+  unreadable graph. Raise the caps for a bigger graph at the cost of a slower
+  build.
 
 ## 🎨 Color Scheme
 

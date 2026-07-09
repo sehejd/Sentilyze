@@ -20,8 +20,7 @@ connections are surfaced as "possible matches for manual verification," not
 asserted as certain.
 """
 
-import re
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 
 from scraping.lobbying import get_lobbying_summary
@@ -29,30 +28,7 @@ from scraping.congress_bills import resolve_bill_references, is_configured as co
 from scraping.company_officers import get_company_officers
 from scraping.political_contributions import get_executive_donations
 from scraping.insider_trading import get_congressional_trades
-
-_STOPWORDS = {
-    'senator', 'sen', 'representative', 'rep', 'dr', 'mr', 'mrs', 'ms',
-    'jr', 'sr', 'ii', 'iii', 'iv', 'honorable', 'hon', 'the',
-}
-
-
-def _name_tokens(name: Optional[str]) -> set:
-    if not name:
-        return set()
-    cleaned = re.sub(r'\[.*?\]', '', name)  # strip party/state tags like "[R-TX]"
-    cleaned = re.sub(r'[^a-zA-Z\s,]', '', cleaned).lower()
-    tokens = re.split(r'[\s,]+', cleaned)
-    return {t for t in tokens if len(t) >= 4 and t not in _STOPWORDS}
-
-
-def _names_possibly_match(name_a: Optional[str], name_b: Optional[str]) -> bool:
-    tokens_a = _name_tokens(name_a)
-    tokens_b = _name_tokens(name_b)
-    return bool(tokens_a & tokens_b)
-
-
-def _bill_label(bill: Dict[str, Any]) -> str:
-    return f"{(bill.get('bill_type') or '').upper()} {bill.get('bill_number') or '?'}"
+from utils.political import names_possibly_match as _names_possibly_match, bill_label as _bill_label
 
 
 def build_political_network(ticker: str, company_name: str) -> Dict[str, Any]:

@@ -13,7 +13,7 @@ const RATING_COLORS: Record<string, string> = {
   strong: "bg-green-500",
   good: "bg-green-400",
   fair: "bg-yellow-400",
-  weak: "bg-accent",
+  weak: "bg-accent-red",
   insufficient_data: "bg-beige",
 };
 
@@ -53,7 +53,7 @@ export default function FundamentalsPanel({ fundamentals }: FundamentalsPanelPro
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-accent" />
+            <BarChart3 className="w-4 h-4 text-accent-red" />
             <div>
               <CardTitle className="text-base font-semibold text-dark">Fundamental Analysis</CardTitle>
               <CardDescription className="text-xs text-grayish">
@@ -87,7 +87,7 @@ export default function FundamentalsPanel({ fundamentals }: FundamentalsPanelPro
               {item.score !== null && (
                 <div className="h-1 mt-1 rounded-full bg-beige/50 overflow-hidden">
                   <div
-                    className={`h-full ${item.score >= 75 ? "bg-green-500" : item.score >= 50 ? "bg-yellow-400" : "bg-accent"}`}
+                    className={`h-full ${item.score >= 75 ? "bg-green-500" : item.score >= 50 ? "bg-yellow-400" : "bg-accent-red"}`}
                     style={{ width: `${item.score}%` }}
                   />
                 </div>

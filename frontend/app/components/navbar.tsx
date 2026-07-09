@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input"
-import { Search, Home, User, Loader2, LineChart, Network } from "lucide-react"
+import { Search, Home, User, Loader2, LineChart, Network, Calculator } from "lucide-react"
 import { useState, KeyboardEvent, useEffect } from "react"
 import Link from "next/link"
 import { useSearch } from "@/lib/hooks/useSearch"
@@ -93,6 +93,9 @@ export default function Navbar({
               </Link>
               <Link href="/political-web" title="Political Web">
                 <Network className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
+              </Link>
+              <Link href="/valuation" title="Valuation Calculator">
+                <Calculator className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
               </Link>
               <User className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
             </div>

@@ -540,6 +540,80 @@ export interface PoliticalWebParams {
   max_donation_companies?: number;
 }
 
+// ---- Valuation calculator ----
+
+export type ValuationMethodType = 'dcf' | 'comparable_company_analysis' | 'ddm' | 'graham_number' | 'asset_based';
+
+export interface ValuationMethodResult {
+  method: ValuationMethodType;
+  applicable: boolean;
+  fair_value_per_share?: number;
+  current_price?: number;
+  upside_pct?: number;
+  assumptions?: Record<string, unknown>;
+  note: string;
+  peers_used?: string[];
+}
+
+export interface ValuationResponse {
+  success: boolean;
+  ticker: string;
+  company_name: string;
+  sector?: string;
+  industry?: string;
+  current_price: number;
+  methods: ValuationMethodResult[];
+  methods_applicable: number;
+  blended_fair_value_per_share: number | null;
+  blended_upside_pct: number | null;
+  rating: 'undervalued' | 'overvalued' | 'fairly_valued' | 'insufficient_data';
+  timestamp: string;
+  disclaimer: string;
+  error?: string;
+}
+
+// ---- Peer performance logistic regression ----
+
+export interface PeerPerformanceCoefficient {
+  feature: string;
+  label: string;
+  coefficient: number;
+  direction: string;
+}
+
+export interface PeerTableRow {
+  ticker: string;
+  company_name: string;
+  trailing_return_pct: number;
+  outperformed_median: boolean;
+}
+
+export interface PeerPerformanceResponse {
+  success: boolean;
+  ticker: string;
+  sector?: string;
+  lookback_months: number;
+  peer_count: number;
+  sector_median_return_pct: number;
+  target: {
+    trailing_return_pct: number | null;
+    outperformed_median: boolean | null;
+    predicted_probability_of_outperformance: number;
+    features: Record<string, number | null>;
+  };
+  model: {
+    type: string;
+    trained_on: string;
+    regularization_C: number;
+    coefficients: PeerPerformanceCoefficient[];
+    train_accuracy: number;
+  };
+  peer_table: PeerTableRow[];
+  timestamp: string;
+  methodology_caveat: string;
+  error?: string;
+}
+
 // Enum for different scraper sources
 export enum ScraperSource {
   YAHOO = 'yahoo',
@@ -687,5 +761,23 @@ export const fetchPoliticalWeb = async (params: PoliticalWebParams = {}): Promis
   if (params.max_lobbying_companies !== undefined) query.set('max_lobbying_companies', String(params.max_lobbying_companies));
   if (params.max_donation_companies !== undefined) query.set('max_donation_companies', String(params.max_donation_companies));
   const response = await apiClient.get(`/api/political-web?${query.toString()}`, { timeout: 120000 });
+  return response.data;
+};
+
+export const fetchValuation = async (ticker: string, peerTickers?: string[]): Promise<ValuationResponse> => {
+  const params = new URLSearchParams({ ticker: ticker.toUpperCase() });
+  if (peerTickers && peerTickers.length > 0) params.set('peer_tickers', peerTickers.join(','));
+  const response = await apiClient.get(`/api/valuation?${params.toString()}`, { timeout: 60000 });
+  return response.data;
+};
+
+export const fetchPeerPerformance = async (
+  ticker: string,
+  lookbackMonths = 12,
+  peerTickers?: string[]
+): Promise<PeerPerformanceResponse> => {
+  const params = new URLSearchParams({ ticker: ticker.toUpperCase(), lookback_months: String(lookbackMonths) });
+  if (peerTickers && peerTickers.length > 0) params.set('peer_tickers', peerTickers.join(','));
+  const response = await apiClient.get(`/api/peer-performance?${params.toString()}`, { timeout: 90000 });
   return response.data;
 };

@@ -11,7 +11,7 @@ interface SocialTrendsPanelProps {
 }
 
 const MOMENTUM_STYLES: Record<string, string> = {
-  surging: "bg-accent",
+  surging: "bg-accent-red",
   rising: "bg-green-500",
   steady: "bg-yellow-400",
   fading: "bg-beige",
@@ -25,7 +25,7 @@ export default function SocialTrendsPanel({ social }: SocialTrendsPanelProps) {
     <Card className="bg-light border-beige">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <Flame className="w-4 h-4 text-accent" />
+          <Flame className="w-4 h-4 text-accent-red" />
           <div>
             <CardTitle className="text-base font-semibold text-dark">Social & Search Momentum</CardTitle>
             <CardDescription className="text-xs text-grayish">Retail attention velocity</CardDescription>

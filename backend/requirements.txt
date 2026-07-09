@@ -18,6 +18,9 @@ pytrends==4.9.2
 # Backtesting engine (backtesting/engine.py) needs pandas (above) for
 # indicator math - no extra dependency required.
 
+# Valuation calculator + peer-performance logistic regression
+scikit-learn>=1.4,<2
+
 # Optional: transformer-based FinBERT sentiment (see analysis/ml_sentiment.py).
 # Not installed by default - it pulls in torch (~1GB+). Install separately with:
 #   pip install -r requirements-ml.txt

@@ -91,7 +91,7 @@ function RuleRow({
         />
       )}
 
-      <button onClick={onRemove} className="ml-auto text-grayish hover:text-accent">
+      <button onClick={onRemove} className="ml-auto text-grayish hover:text-accent-red">
         <Trash2 className="w-3.5 h-3.5" />
       </button>
     </div>
@@ -309,7 +309,7 @@ export default function BacktestPage() {
                       />
                       <button
                         onClick={() => setFundamentalChecks(fundamentalChecks.filter((_, idx) => idx !== i))}
-                        className="ml-auto text-grayish hover:text-accent"
+                        className="ml-auto text-grayish hover:text-accent-red"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -330,8 +330,8 @@ export default function BacktestPage() {
         </Card>
 
         {error && (
-          <Alert className="border-accent bg-red-50">
-            <AlertCircle className="h-4 w-4 text-accent" />
+          <Alert className="border-accent-red bg-red-50">
+            <AlertCircle className="h-4 w-4 text-accent-red" />
             <AlertDescription className="text-dark">{error}</AlertDescription>
           </Alert>
         )}
@@ -406,7 +406,7 @@ export default function BacktestPage() {
                         <tr key={i} className="border-b border-beige/50">
                           <td className="py-1.5 pr-3 text-dark">{trade.date}</td>
                           <td className="py-1.5 pr-3">
-                            <span className={trade.action === "buy" ? "text-green-600 font-medium" : "text-accent font-medium"}>
+                            <span className={trade.action === "buy" ? "text-green-600 font-medium" : "text-accent-red font-medium"}>
                               {trade.action.toUpperCase()}
                             </span>
                           </td>

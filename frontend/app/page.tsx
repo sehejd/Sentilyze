@@ -109,8 +109,8 @@ export default function Home() {
 						{/* Error State */}
 						{error && !isLoading && (
 							<div className="w-full max-w-4xl mx-auto">
-								<Alert className="border-accent bg-red-50">
-									<AlertCircle className="h-4 w-4 text-accent" />
+								<Alert className="border-accent-red bg-red-50">
+									<AlertCircle className="h-4 w-4 text-accent-red" />
 									<AlertDescription className="text-dark">
 										{error}
 									</AlertDescription>
@@ -185,7 +185,7 @@ export default function Home() {
 												<p className="text-grayish">Change</p>
 												<p className={`text-xl font-semibold ${
 													searchResult.change.toString().startsWith('+') ? 'text-green-500' : 
-													searchResult.change.toString().startsWith('-') ? 'text-accent' : 'text-grayish'
+													searchResult.change.toString().startsWith('-') ? 'text-accent-red' : 'text-grayish'
 												}`}>
 													{searchResult.change}
 												</p>
@@ -194,7 +194,7 @@ export default function Home() {
 												<p className="text-grayish">Percent Change</p>
 												<p className={`text-xl font-semibold ${
 													searchResult.percent_change.toString().startsWith('+') ? 'text-green-500' : 
-													searchResult.percent_change.toString().startsWith('-') ? 'text-accent' : 'text-grayish'
+													searchResult.percent_change.toString().startsWith('-') ? 'text-accent-red' : 'text-grayish'
 												}`}>
 													{searchResult.percent_change}
 												</p>
@@ -223,7 +223,7 @@ export default function Home() {
 														</div>
 														<div className={`px-3 py-1 rounded-full text-sm font-medium ${
 															headline.sentiment === 'positive' ? 'bg-green-500 text-white' :
-															headline.sentiment === 'negative' ? 'bg-accent text-white' :
+															headline.sentiment === 'negative' ? 'bg-accent-red text-white' :
 															'bg-yellow-400 text-white'
 														}`}>
 															{headline.sentiment}

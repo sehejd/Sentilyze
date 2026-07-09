@@ -187,7 +187,7 @@ export default function PoliticalWebPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-dark flex items-center gap-2">
-              <Network className="w-7 h-7 text-accent" />
+              <Network className="w-7 h-7 text-accent-red" />
               Political Web
             </h1>
             <p className="text-sm text-grayish">
@@ -238,8 +238,8 @@ export default function PoliticalWebPage() {
         </Card>
 
         {error && (
-          <Alert className="border-accent bg-red-50">
-            <AlertCircle className="h-4 w-4 text-accent" />
+          <Alert className="border-accent-red bg-red-50">
+            <AlertCircle className="h-4 w-4 text-accent-red" />
             <AlertDescription className="text-dark">{error}</AlertDescription>
           </Alert>
         )}

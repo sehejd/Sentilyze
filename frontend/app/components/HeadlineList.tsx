@@ -114,7 +114,7 @@ export default function HeadlineList({ rawData }: HeadlineListProps) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-accent" />
+                  <TrendingUp className="w-4 h-4 text-accent-red" />
                   <div>
                     <CardTitle className="text-sm font-semibold text-dark">
                       Yahoo Finance

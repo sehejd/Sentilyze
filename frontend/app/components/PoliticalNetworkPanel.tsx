@@ -40,7 +40,7 @@ export default function PoliticalNetworkPanel({ ticker, companyName }: Political
       <Card className="bg-light border-beige">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <Network className="w-4 h-4 text-accent" />
+            <Network className="w-4 h-4 text-accent-red" />
             <div>
               <CardTitle className="text-base font-semibold text-dark">Political Network - Deeper Dive</CardTitle>
               <CardDescription className="text-xs text-grayish">
@@ -60,7 +60,7 @@ export default function PoliticalNetworkPanel({ ticker, companyName }: Political
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Network className="w-4 h-4" />}
             Load Deeper Dive
           </Button>
-          {error && <p className="text-xs text-accent mt-2">{error}</p>}
+          {error && <p className="text-xs text-accent-red mt-2">{error}</p>}
         </CardContent>
       </Card>
     );
@@ -72,7 +72,7 @@ export default function PoliticalNetworkPanel({ ticker, companyName }: Political
     <Card className="bg-light border-beige">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <Network className="w-4 h-4 text-accent" />
+          <Network className="w-4 h-4 text-accent-red" />
           <div>
             <CardTitle className="text-base font-semibold text-dark">Political Network - Deeper Dive</CardTitle>
             <CardDescription className="text-xs text-grayish">{data.disclaimer}</CardDescription>
@@ -84,7 +84,7 @@ export default function PoliticalNetworkPanel({ ticker, companyName }: Political
         {data.connections.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-semibold text-dark flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-accent" />
+              <AlertTriangle className="w-3.5 h-3.5 text-accent-red" />
               Possible Connections
             </h4>
             {data.connections.map((connection, i) => (
@@ -155,7 +155,7 @@ export default function PoliticalNetworkPanel({ ticker, companyName }: Political
                           {bill.bill_type.toUpperCase()} {bill.bill_number}
                         </span>
                         {bill.congress_gov_url && (
-                          <a href={bill.congress_gov_url} target="_blank" rel="noopener noreferrer" className="text-grayish hover:text-accent flex items-center gap-1">
+                          <a href={bill.congress_gov_url} target="_blank" rel="noopener noreferrer" className="text-grayish hover:text-accent-red flex items-center gap-1">
                             <ExternalLink className="w-3 h-3" /> View
                           </a>
                         )}

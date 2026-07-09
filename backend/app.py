@@ -31,6 +31,8 @@ from analysis.composite import compute_composite_score
 from analysis.orchestrator import build_full_analysis
 from analysis.political_network import build_political_network
 from analysis.political_web import build_political_web
+from analysis.valuation import run_valuation
+from analysis.peer_performance_model import run_peer_performance_analysis
 
 # Import backtesting engine
 from backtesting.engine import run_backtest
@@ -497,6 +499,64 @@ def political_web_endpoint():
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({'error': f'Political web build failed: {str(e)}'}), 500
+
+
+@app.route('/api/valuation', methods=['GET'])
+def valuation_endpoint():
+    """
+    Multi-method fundamental valuation: DCF, comparable company analysis,
+    dividend discount model, Graham number, and asset-based valuation.
+
+    Optional: peer_tickers=TICK1,TICK2,... to override the default sector peer list.
+
+    Example: /api/valuation?ticker=AAPL
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    peer_tickers = request.args.get('peer_tickers')
+    peer_list = [t.strip().upper() for t in peer_tickers.split(',') if t.strip()] if peer_tickers else None
+
+    try:
+        result = run_valuation(ticker, peer_tickers=peer_list)
+        if not result.get('success'):
+            return jsonify({'error': result.get('error', 'Unknown error')}), 404
+        return jsonify(result)
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'error': f'Valuation failed for {ticker}: {str(e)}'}), 500
+
+
+@app.route('/api/peer-performance', methods=['GET'])
+def peer_performance_endpoint():
+    """
+    Cross-sectional logistic regression: compares the ticker's fundamentals,
+    news sentiment, and congressional trading signal against sector peers,
+    labeled by trailing price return vs the sector median. See
+    analysis/peer_performance_model.py for the methodology caveats - this is
+    a snapshot comparison, not a historical panel model.
+
+    Optional: lookback_months (default 12), peer_tickers=TICK1,TICK2,...
+
+    Example: /api/peer-performance?ticker=AAPL&lookback_months=12
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    lookback_months = request.args.get('lookback_months', 12, type=int)
+    peer_tickers = request.args.get('peer_tickers')
+    peer_list = [t.strip().upper() for t in peer_tickers.split(',') if t.strip()] if peer_tickers else None
+
+    try:
+        result = run_peer_performance_analysis(ticker, lookback_months=lookback_months, peer_tickers=peer_list)
+        if not result.get('success'):
+            return jsonify({'error': result.get('error', 'Unknown error')}), 404
+        return jsonify(result)
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'error': f'Peer performance analysis failed for {ticker}: {str(e)}'}), 500
 
 
 @app.route('/api/backtest/indicators', methods=['GET'])

@@ -11,8 +11,8 @@ export default function LoadingSpinner() {
         <CardContent className="py-8">
           <div className="flex flex-col items-center text-center">
             <div className="relative mb-4">
-              <Brain className="w-8 h-8 text-accent animate-pulse" />
-              <div className="absolute inset-0 w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+              <Brain className="w-8 h-8 text-accent-red animate-pulse" />
+              <div className="absolute inset-0 w-8 h-8 border-2 border-accent-red border-t-transparent rounded-full animate-spin"></div>
             </div>
             <h3 className="text-lg font-semibold text-dark mb-2">
               Analyzing Market Sentiment
@@ -45,7 +45,7 @@ export default function LoadingSpinner() {
             
             {/* Loading Bar */}
             <div className="w-full max-w-xs bg-beige rounded-full h-1.5 overflow-hidden">
-              <div className="bg-accent h-full rounded-full animate-pulse" style={{
+              <div className="bg-accent-red h-full rounded-full animate-pulse" style={{
                 animation: 'loading 2s ease-in-out infinite',
                 width: '60%'
               }}></div>

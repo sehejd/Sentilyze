@@ -42,6 +42,16 @@ strategy ideas against real historical price data.
   company they've disclosed trading), then layers in lobbying/bill-sponsor and
   executive-donation edges for the most active companies. Drag, zoom, click any
   node to see its connections. See `/political-web`.
+- **Valuation calculator**: five independent fundamental valuation methods -
+  Discounted Cash Flow, Comparable Company Analysis (sector peer multiples),
+  Dividend Discount Model, Graham Number, and Asset-Based/Book Value - each
+  with its own stated assumptions, plus a blended estimate. See `/valuation`.
+- **Peer performance model**: a logistic regression comparing the company's
+  fundamentals, news sentiment, and congressional trading signal against
+  ~10-15 current sector peers, labeled by trailing price return, to surface
+  which indicators correlate with outperformance in that peer set. This is a
+  cross-sectional snapshot (free data doesn't expose historical point-in-time
+  fundamentals), not a historical panel model - documented in depth below.
 
 ## 🚀 Quick Start
 
@@ -107,6 +117,8 @@ analysis; the nav bar's chart icon links to `/backtest`.
 | `GET /api/social-trends?ticker=` | Reddit mention velocity + Google Trends interest |
 | `GET /api/political-network?ticker=` | Deeper dive: lobbying, bills, sponsors, executives, campaign contributions, cross-referenced connections |
 | `GET /api/political-web?days_back=&max_trading_edges=&max_lobbying_companies=&max_donation_companies=` | Multi-company politician↔company network graph |
+| `GET /api/valuation?ticker=&peer_tickers=` | DCF, comps, DDM, Graham number, asset-based valuation + blended estimate |
+| `GET /api/peer-performance?ticker=&lookback_months=&peer_tickers=` | Logistic regression vs. sector peers |
 | `GET /api/yahoo`, `/api/reddit`, `/api/twitter` | Individual raw source data |
 | `GET /api/analyze?ticker=` | Legacy comprehensive endpoint (Yahoo/Reddit/Twitter only) |
 | `GET /api/backtest/indicators` | Metadata for the backtest rule builder |
@@ -157,7 +169,10 @@ backend/
 │   ├── composite.py           # Weighted composite score
 │   ├── orchestrator.py        # Fans out all sources in parallel, blends results
 │   ├── political_network.py   # Per-ticker deeper-dive: lobbying + bills + executives + donations
-│   └── political_web.py       # Multi-company graph: full trading dataset + bounded lobbying/donation enrichment
+│   ├── political_web.py       # Multi-company graph: full trading dataset + bounded lobbying/donation enrichment
+│   ├── sector_peers.py        # Curated sector -> peer ticker lists (comps valuation + peer performance model)
+│   ├── valuation.py           # DCF, comps, DDM, Graham number, asset-based valuation
+│   └── peer_performance_model.py  # Cross-sectional logistic regression vs. sector peers
 ├── backtesting/
 │   ├── indicators.py          # SMA/EMA/RSI/MACD/Bollinger Bands
 │   └── engine.py              # Rule-based backtest simulator
@@ -177,6 +192,9 @@ backend/
 - **Political Web UI**: `/political-web` - custom force-directed graph
   (`lib/graphLayout.ts`, `d3-force` for physics + plain SVG rendering),
   draggable/zoomable/pannable, click a node for its connections
+- **Valuation UI**: `/valuation` - five valuation method cards with expandable
+  assumptions, blended consensus, and a peer-performance section with a
+  coefficient bar chart and sector peer table
 
 ## ⚠️ Known limitations (by design, given free data sources)
 
@@ -211,6 +229,21 @@ backend/
   every company in the trading dataset would take far too long and produce an
   unreadable graph. Raise the caps for a bigger graph at the cost of a slower
   build.
+- **Valuation methods are assumption-driven, and the assumptions are the
+  point.** DCF's fair value swings enormously with its growth/discount-rate
+  inputs; Graham Number and DDM assume stable, mature businesses; Comps is
+  only as good as the sector peer list. Every method's response includes its
+  own assumptions - read them, don't just take the blended number.
+- **The peer performance model is a cross-sectional snapshot, not a
+  historical panel.** Free data sources (same limitation as the backtest
+  engine) don't expose point-in-time historical fundamentals, so this can't
+  train on "companies in this position historically" across many past
+  periods. Instead it compares ~10-15 *current* sector peers' fundamentals
+  against their own trailing price return. With that few observations,
+  logistic regression coefficients are suggestive correlations within that
+  specific snapshot, not statistically robust or forward-predictive findings
+  - this is stated in every response's `methodology_caveat` field, not just
+  here.
 
 ## 🎨 Color Scheme
 
@@ -223,11 +256,12 @@ backend/
 ## 📦 Tech Stack
 
 ### Frontend
-- Next.js 15, TypeScript, Tailwind CSS 4, shadcn/ui, Recharts, Axios, Lucide React
+- Next.js 15, TypeScript, Tailwind CSS 4, shadcn/ui, Recharts, d3-force, Axios, Lucide React
 
 ### Backend
 - Python 3.11+, Flask, yfinance, VADER + TextBlob (optional FinBERT via
-  transformers/torch), pandas, requests, pytrends, google-generativeai (optional)
+  transformers/torch), scikit-learn, pandas, numpy, requests, pytrends,
+  google-generativeai (optional)
 
 ## 🔮 Possible future enhancements
 

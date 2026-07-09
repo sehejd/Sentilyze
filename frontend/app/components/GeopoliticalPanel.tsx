@@ -12,7 +12,7 @@ interface GeopoliticalPanelProps {
 const EXPOSURE_STYLES: Record<string, string> = {
   low: "bg-green-500",
   moderate: "bg-yellow-400",
-  high: "bg-accent",
+  high: "bg-accent-red",
 };
 
 const THEME_LABELS: Record<string, string> = {
@@ -34,7 +34,7 @@ export default function GeopoliticalPanel({ geopolitical }: GeopoliticalPanelPro
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <Globe2 className="w-4 h-4 text-accent" />
+            <Globe2 className="w-4 h-4 text-accent-red" />
             <div>
               <CardTitle className="text-base font-semibold text-dark">Geopolitical Exposure</CardTitle>
               <CardDescription className="text-xs text-grayish">
@@ -62,7 +62,7 @@ export default function GeopoliticalPanel({ geopolitical }: GeopoliticalPanelPro
                         href={article.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-grayish hover:text-accent flex items-center gap-1 line-clamp-1"
+                        className="text-xs text-grayish hover:text-accent-red flex items-center gap-1 line-clamp-1"
                       >
                         <ExternalLink className="w-3 h-3 shrink-0" />
                         {article.title}

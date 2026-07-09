@@ -11,7 +11,7 @@ interface InsiderTradingPanelProps {
 
 const SIGNAL_STYLES: Record<string, { label: string; color: string }> = {
   net_buying: { label: "Net Buying", color: "bg-green-500" },
-  net_selling: { label: "Net Selling", color: "bg-accent" },
+  net_selling: { label: "Net Selling", color: "bg-accent-red" },
   mixed: { label: "Mixed Activity", color: "bg-yellow-400" },
   no_activity: { label: "No Recent Activity", color: "bg-beige" },
 };
@@ -26,7 +26,7 @@ export default function InsiderTradingPanel({ insider }: InsiderTradingPanelProp
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <Landmark className="w-4 h-4 text-accent" />
+            <Landmark className="w-4 h-4 text-accent-red" />
             <div>
               <CardTitle className="text-base font-semibold text-dark">Political Insider Trading</CardTitle>
               <CardDescription className="text-xs text-grayish">
@@ -65,7 +65,7 @@ export default function InsiderTradingPanel({ insider }: InsiderTradingPanelProp
                   className={
                     tx.transaction_type.toLowerCase().includes("purchase")
                       ? "bg-green-500 text-white"
-                      : "bg-accent text-white"
+                      : "bg-accent-red text-white"
                   }
                 >
                   {tx.transaction_type}

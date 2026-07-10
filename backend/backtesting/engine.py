@@ -17,14 +17,14 @@ mistaken for point-in-time backtesting.
 from typing import Dict, List, Any, Optional
 import math
 import pandas as pd
-import yfinance as yf
 
 from backtesting.indicators import compute_all_indicators
+from utils.yf_client import get_history
 
 
 def load_price_history(ticker: str, start: str, end: Optional[str] = None) -> pd.DataFrame:
     ticker = ticker.upper().strip()
-    df = yf.Ticker(ticker).history(start=start, end=end, auto_adjust=True)
+    df = get_history(ticker, start=start, end=end, auto_adjust=True)
     if df.empty:
         raise ValueError(f"No historical price data available for {ticker} in the given range")
     df.index = pd.to_datetime(df.index)

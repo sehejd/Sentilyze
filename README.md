@@ -126,15 +126,35 @@ order:
    render" message in that panel instead of silently blanking the page -
    if you still see a fully blank/static page with no error message
    anywhere, that's itself informative (check the Console tab).
+5. **Yahoo Finance rate limiting** - fundamentals, valuation, comps, sector
+   peers, company officers, backtesting, and the new price history chart all
+   read from `yfinance`, which scrapes Yahoo's unofficial API. Yahoo
+   aggressively rate-limits repeated requests (especially from cloud/hosting
+   IPs), and if it trips, every one of those features degrades at once -
+   this is the single most common cause of "the whole site is broken." All
+   yfinance access now goes through `backend/utils/yf_client.py`, which
+   caches successful responses (15 min) and retries rate-limited requests
+   with exponential backoff before giving up. If a ticker still comes back
+   empty after that, it's genuinely rate-limited at the moment - the failure
+   is cached for only 90 seconds, so the *next* request for that ticker
+   retries fresh instead of staying broken. If this happens constantly,
+   Yahoo may be blocking your IP more aggressively than usual; waiting a
+   few minutes and retrying is currently the only workaround.
 
 ## 🎯 Usage
 
-1. Enter a ticker on the home page to see the composite score, fundamentals,
-   insider trading, geopolitical exposure, social momentum, SWOT, and raw
-   headlines/posts/tweets.
-2. Go to `/backtest` to build a rule-based strategy (e.g. "buy when RSI < 30,
-   sell when RSI > 70, 10% stop loss") and run it over real historical price
-   data.
+1. Enter a ticker on the home page to see a real price history chart
+   (with 20/50-day moving averages and a period selector), the composite
+   score, fundamentals, insider trading, geopolitical exposure, social
+   momentum, SWOT, and raw headlines/posts/tweets.
+2. Go to `/backtest` to build a rule-based strategy - pick a preset (RSI
+   mean reversion, SMA golden cross, MACD crossover, Bollinger bounce) or
+   build your own rules from scratch (e.g. "buy when RSI < 30, sell when
+   RSI > 70, 10% stop loss") - and run it over real historical price data.
+3. Go to `/valuation` to run five independent valuation methods (DCF,
+   comps, DDM, Graham number, asset-based), see a fair-value-by-method
+   comparison chart against the current price, and optionally run the
+   cross-sectional peer performance model.
 
 ## 🔧 API Endpoints
 
@@ -152,6 +172,7 @@ order:
 | `GET /api/political-web?days_back=&max_trading_edges=&max_lobbying_companies=&max_donation_companies=` | Multi-company politician↔company network graph |
 | `GET /api/valuation?ticker=&peer_tickers=` | DCF, comps, DDM, Graham number, asset-based valuation + blended estimate |
 | `GET /api/peer-performance?ticker=&lookback_months=&peer_tickers=` | Logistic regression vs. sector peers |
+| `GET /api/price-history?ticker=&period=` | Real OHLCV + 20/50-day SMA for the dashboard price chart (`period`: `1mo`/`3mo`/`6mo`/`1y`/`2y`/`5y`, default `6mo`) |
 | `GET /api/yahoo`, `/api/reddit`, `/api/twitter` | Individual raw source data |
 | `GET /api/analyze?ticker=` | Legacy comprehensive endpoint (Yahoo/Reddit/Twitter only) |
 | `GET /api/backtest/indicators` | Metadata for the backtest rule builder |
@@ -205,22 +226,27 @@ backend/
 │   ├── political_web.py       # Multi-company graph: full trading dataset + bounded lobbying/donation enrichment
 │   ├── sector_peers.py        # Curated sector -> peer ticker lists (comps valuation + peer performance model)
 │   ├── valuation.py           # DCF, comps, DDM, Graham number, asset-based valuation
-│   └── peer_performance_model.py  # Cross-sectional logistic regression vs. sector peers
+│   ├── peer_performance_model.py  # Cross-sectional logistic regression vs. sector peers
+│   └── price_history.py       # OHLCV + 20/50-day SMA for the dashboard price chart
 ├── backtesting/
 │   ├── indicators.py          # SMA/EMA/RSI/MACD/Bollinger Bands
 │   └── engine.py              # Rule-based backtest simulator
 └── utils/
     ├── cache.py                # Disk cache for slow/rate-limited public datasets
+    ├── yf_client.py             # Centralized cached/retrying yfinance access (see Troubleshooting above)
     └── political.py            # Shared name-matching helpers (political_network.py + political_web.py)
 ```
 
 ### Frontend (Next.js + TypeScript)
 - **Components**: shadcn/ui + custom panels (`FundamentalsPanel`,
   `InsiderTradingPanel`, `GeopoliticalPanel`, `SocialTrendsPanel`, `SwotPanel`,
-  `CompositeScoreGauge`, `PoliticalNetworkPanel`)
+  `CompositeScoreGauge`, `PoliticalNetworkPanel`, `PriceHistoryChart`)
 - **API Layer**: Axios-based client (`lib/api.ts`) with full TypeScript types
   for every endpoint
-- **Backtesting UI**: `/backtest` - rule builder + equity curve chart (recharts)
+- **Backtesting UI**: `/backtest` - strategy presets + rule builder + equity
+  curve chart (recharts)
+- **Valuation UI**: `/valuation` - fair-value-by-method comparison chart +
+  method explainer text + peer performance model (recharts)
   + trade log
 - **Political Web UI**: `/political-web` - custom force-directed graph
   (`lib/graphLayout.ts`, `d3-force` for physics + plain SVG rendering),

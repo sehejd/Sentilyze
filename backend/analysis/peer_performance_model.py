@@ -23,7 +23,6 @@ from concurrent.futures import ThreadPoolExecutor
 import statistics
 
 import numpy as np
-import yfinance as yf
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
@@ -32,6 +31,7 @@ from analysis.fundamentals import get_fundamentals
 from analysis.ml_sentiment import classify_batch
 from scraping.yahoo import scrape_yahoo_stock
 from scraping.insider_trading import get_congressional_trades
+from utils.yf_client import get_info, get_history
 
 FEATURE_NAMES = [
     'pe_ratio', 'price_to_book', 'debt_to_equity', 'return_on_equity',
@@ -70,7 +70,7 @@ def _insider_signal(ticker: str) -> float:
 
 def _trailing_return(ticker: str, months: int) -> Optional[float]:
     try:
-        hist = yf.Ticker(ticker).history(period=f'{months}mo')
+        hist = get_history(ticker, period=f'{months}mo')
         if hist.empty or len(hist) < 2:
             return None
         return float(hist['Close'].iloc[-1] / hist['Close'].iloc[0] - 1)
@@ -121,11 +121,9 @@ def run_peer_performance_analysis(
     min_peers: int = 6,
 ) -> Dict[str, Any]:
     ticker = ticker.upper().strip()
-
-    try:
-        target_info = yf.Ticker(ticker).info
-    except Exception as e:
-        return {'success': False, 'error': f"Error fetching data for {ticker}: {str(e)}"}
+    target_info = get_info(ticker)
+    if not target_info:
+        return {'success': False, 'error': f"No data found for {ticker} (Yahoo Finance unavailable or rate limited)"}
 
     sector = target_info.get('sector')
     peers = peer_tickers or get_sector_peers(ticker, sector=sector, limit=15)

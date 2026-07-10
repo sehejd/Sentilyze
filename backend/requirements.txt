@@ -1,6 +1,9 @@
 flask==3.0.3
 flask-cors==4.0.2
-yfinance==0.2.28
+# Pinned to a recent stable release - yfinance's compatibility with Yahoo's
+# unofficial API changes constantly, and older pins go stale/broken fast.
+# See utils/yf_client.py for how we mitigate Yahoo's rate limiting.
+yfinance>=1.5,<2
 requests==2.32.3
 beautifulsoup4==4.12.3
 pandas==2.2.2

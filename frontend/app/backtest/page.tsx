@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Trash2, Play, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Play, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,40 @@ const OPERATOR_LABELS: Record<string, string> = {
 function emptyRule(): BacktestRule {
   return { field: "close", operator: "<", value: 0 };
 }
+
+interface StrategyPreset {
+  name: string;
+  description: string;
+  entryRules: BacktestRule[];
+  exitRules: BacktestRule[];
+}
+
+const STRATEGY_PRESETS: StrategyPreset[] = [
+  {
+    name: "RSI Mean Reversion",
+    description: "Buy when RSI signals oversold (<30), sell when it signals overbought (>70).",
+    entryRules: [{ field: "rsi_14", operator: "<", value: 30 }],
+    exitRules: [{ field: "rsi_14", operator: ">", value: 70 }],
+  },
+  {
+    name: "SMA Golden Cross",
+    description: "Buy when the 20-day SMA crosses above the 50-day SMA, sell on the reverse (death cross).",
+    entryRules: [{ field: "sma_20", operator: "crosses_above", value: "sma_50" }],
+    exitRules: [{ field: "sma_20", operator: "crosses_below", value: "sma_50" }],
+  },
+  {
+    name: "MACD Crossover",
+    description: "Buy when the MACD line crosses above its signal line, sell on the reverse crossover.",
+    entryRules: [{ field: "macd", operator: "crosses_above", value: "macd_signal" }],
+    exitRules: [{ field: "macd", operator: "crosses_below", value: "macd_signal" }],
+  },
+  {
+    name: "Bollinger Bounce",
+    description: "Buy when price closes below the lower Bollinger band (oversold), sell when it closes above the upper band.",
+    entryRules: [{ field: "close", operator: "crosses_below", value: "bb_lower" }],
+    exitRules: [{ field: "close", operator: "crosses_above", value: "bb_upper" }],
+  },
+];
 
 function emptyCheck(): FundamentalGateCheck {
   return { metric: "pe_ratio", operator: "<", value: 25 };
@@ -118,9 +152,16 @@ export default function BacktestPage() {
   const [result, setResult] = useState<BacktestResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBacktestIndicators().then(setIndicatorsMeta).catch(() => setIndicatorsMeta(null));
+  }, []);
+
+  const applyPreset = useCallback((preset: StrategyPreset) => {
+    setEntryRules(preset.entryRules.map((r) => ({ ...r })));
+    setExitRules(preset.exitRules.map((r) => ({ ...r })));
+    setActivePreset(preset.name);
   }, []);
 
   const handleRun = useCallback(async () => {
@@ -185,6 +226,28 @@ export default function BacktestPage() {
             <CardTitle className="text-base font-semibold text-dark">Strategy Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-dark flex items-center gap-1.5 mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-accent-red" /> Strategy presets
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                {STRATEGY_PRESETS.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => applyPreset(preset)}
+                    className={`text-left p-2.5 rounded border transition-colors ${
+                      activePreset === preset.name
+                        ? "border-accent-red bg-accent-red/5"
+                        : "border-beige bg-white hover:border-grayish"
+                    }`}
+                  >
+                    <p className="text-xs font-semibold text-dark">{preset.name}</p>
+                    <p className="text-[10px] text-grayish mt-0.5 leading-snug">{preset.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
               <div className="col-span-2 md:col-span-1">
                 <label className="text-xs text-grayish">Ticker</label>

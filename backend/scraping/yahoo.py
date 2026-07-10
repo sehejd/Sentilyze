@@ -11,6 +11,8 @@ from typing import Dict, List, Optional, Any
 import time
 from datetime import datetime
 
+from utils.yf_client import get_info, with_retry
+
 
 def scrape_yahoo_stock(ticker: str) -> Dict[str, Any]:
     """
@@ -25,12 +27,18 @@ def scrape_yahoo_stock(ticker: str) -> Dict[str, Any]:
     ticker = ticker.upper().strip()
     
     try:
-        # Get stock data using yfinance
-        stock = yf.Ticker(ticker)
-        info = stock.info
-        
+        # Get stock data using yfinance (cached + retrying - see utils/yf_client.py)
+        info = get_info(ticker)
+        if not info:
+            return {
+                'success': False,
+                'error': f"No data found for ticker {ticker} (Yahoo Finance unavailable or rate limited)",
+                'timestamp': datetime.now().isoformat(),
+                'source': 'Yahoo Finance'
+            }
+
         # Get recent news
-        news = stock.news
+        news = with_retry(lambda: yf.Ticker(ticker).news, what=f".news for {ticker}")
         
         # Extract basic stock information
         stock_data = {

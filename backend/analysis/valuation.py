@@ -22,9 +22,8 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 import math
 
-import yfinance as yf
-
 from analysis.sector_peers import get_sector_peers
+from utils.yf_client import get_info, get_history
 
 EQUITY_RISK_PREMIUM = 0.05  # Damodaran-style long-run US ERP estimate
 DEFAULT_RISK_FREE_RATE = 0.045
@@ -37,7 +36,7 @@ PROJECTION_YEARS = 5
 def _get_risk_free_rate() -> float:
     """10-year US Treasury yield (^TNX quotes it as e.g. 45.0 meaning 4.50%)."""
     try:
-        hist = yf.Ticker('^TNX').history(period='5d')
+        hist = get_history('^TNX', period='5d')
         if not hist.empty:
             return float(hist['Close'].iloc[-1]) / 1000  # ^TNX is quoted *10 in percentage points
     except Exception:
@@ -137,7 +136,9 @@ def discounted_cash_flow(ticker: str, info: Dict[str, Any]) -> Dict[str, Any]:
 
 def _fetch_peer_multiples(peer_ticker: str) -> Optional[Dict[str, Any]]:
     try:
-        info = yf.Ticker(peer_ticker).info
+        info = get_info(peer_ticker)
+        if not info:
+            return None
         market_cap = info.get('marketCap')
         ebitda = info.get('ebitda')
         total_debt = info.get('totalDebt') or 0
@@ -301,13 +302,10 @@ def run_valuation(ticker: str, peer_tickers: Optional[List[str]] = None) -> Dict
     """Run every applicable valuation method and blend the results."""
     ticker = ticker.upper().strip()
 
-    try:
-        info = yf.Ticker(ticker).info
-    except Exception as e:
-        return {'success': False, 'error': f"Error fetching data for {ticker}: {str(e)}"}
+    info = get_info(ticker)
 
     if not info or (info.get('currentPrice') is None and info.get('regularMarketPrice') is None):
-        return {'success': False, 'error': f"No market data available for {ticker}"}
+        return {'success': False, 'error': f"No market data available for {ticker} (Yahoo Finance unavailable or rate limited)"}
 
     methods = [
         discounted_cash_flow(ticker, info),

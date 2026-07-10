@@ -18,9 +18,9 @@ in both places.
 
 from typing import Dict, Any, Optional
 import math
-import yfinance as yf
 
 from scraping.sec_edgar import get_company_facts
+from utils.yf_client import get_info
 
 # Default threshold bands per metric: (excellent_cutoff, good_cutoff, fair_cutoff)
 # direction='low' means lower values are better (crosses bands descending),
@@ -65,14 +65,10 @@ def _score_metric(value: Optional[float], direction: str, bands: tuple) -> Optio
 def get_fundamentals(ticker: str) -> Dict[str, Any]:
     """Pull market ratios (yfinance) + as-reported figures (SEC EDGAR) for a ticker."""
     ticker = ticker.upper().strip()
-
-    try:
-        info = yf.Ticker(ticker).info
-    except Exception as e:
-        return {'success': False, 'error': f"Error fetching yfinance data for {ticker}: {str(e)}"}
+    info = get_info(ticker)
 
     if not info or info.get('trailingPE') is None and info.get('regularMarketPrice') is None:
-        return {'success': False, 'error': f"No fundamental data available for {ticker}"}
+        return {'success': False, 'error': f"No fundamental data available for {ticker} (Yahoo Finance unavailable or rate limited)"}
 
     metrics = {
         'pe_ratio': info.get('trailingPE'),

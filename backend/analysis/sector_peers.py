@@ -13,7 +13,8 @@ data). Callers can always override with their own peer list.
 """
 
 from typing import List, Optional
-import yfinance as yf
+
+from utils.yf_client import get_info
 
 SECTOR_PEERS = {
     'Technology': ['AAPL', 'MSFT', 'NVDA', 'AVGO', 'ORCL', 'CRM', 'ADBE', 'CSCO', 'IBM', 'INTC', 'AMD', 'QCOM'],
@@ -39,10 +40,7 @@ def get_sector_peers(ticker: str, sector: Optional[str] = None, limit: int = 10)
     ticker = ticker.upper().strip()
 
     if sector is None:
-        try:
-            sector = yf.Ticker(ticker).info.get('sector')
-        except Exception:
-            sector = None
+        sector = get_info(ticker).get('sector')
 
     peers = SECTOR_PEERS.get(sector, [])
     filtered = [p for p in peers if p != ticker]

@@ -781,3 +781,37 @@ export const fetchPeerPerformance = async (
   const response = await apiClient.get(`/api/peer-performance?${params.toString()}`, { timeout: 90000 });
   return response.data;
 };
+
+// ---- Price history ----
+
+export interface PricePoint {
+  date: string;
+  close: number;
+  volume: number | null;
+  sma_20: number | null;
+  sma_50: number | null;
+}
+
+export type PriceHistoryPeriod = '1mo' | '3mo' | '6mo' | '1y' | '2y' | '5y';
+
+export interface PriceHistoryResponse {
+  success: boolean;
+  ticker: string;
+  period: string;
+  points: PricePoint[];
+  period_return_pct: number;
+  period_high: number | null;
+  period_low: number | null;
+  timestamp: string;
+  source: string;
+  error?: string;
+}
+
+export const fetchPriceHistory = async (
+  ticker: string,
+  period: PriceHistoryPeriod = '6mo'
+): Promise<PriceHistoryResponse> => {
+  const params = new URLSearchParams({ ticker: ticker.toUpperCase(), period });
+  const response = await apiClient.get(`/api/price-history?${params.toString()}`, { timeout: 45000 });
+  return response.data;
+};

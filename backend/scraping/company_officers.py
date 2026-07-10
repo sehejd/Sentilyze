@@ -9,16 +9,15 @@ for in FEC campaign contribution records.
 
 from typing import Dict, Any, List
 from datetime import datetime
-import yfinance as yf
+
+from utils.yf_client import get_info
 
 
 def get_company_officers(ticker: str, limit: int = 8) -> Dict[str, Any]:
     ticker = ticker.upper().strip()
-
-    try:
-        info = yf.Ticker(ticker).info
-    except Exception as e:
-        return {'success': False, 'error': f"Error fetching officers for {ticker}: {str(e)}", 'source': 'yfinance'}
+    info = get_info(ticker)
+    if not info:
+        return {'success': False, 'error': f"No data found for {ticker} (Yahoo Finance unavailable or rate limited)", 'source': 'yfinance'}
 
     raw_officers = info.get('companyOfficers') or []
     if not raw_officers:

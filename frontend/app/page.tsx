@@ -12,6 +12,7 @@ import InsiderTradingPanel from "@/app/components/InsiderTradingPanel"
 import GeopoliticalPanel from "@/app/components/GeopoliticalPanel"
 import SocialTrendsPanel from "@/app/components/SocialTrendsPanel"
 import PoliticalNetworkPanel from "@/app/components/PoliticalNetworkPanel"
+import PriceHistoryChart from "@/app/components/PriceHistoryChart"
 import ErrorBoundary from "@/app/components/ErrorBoundary"
 import { ChevronDown, AlertCircle, LineChart } from "lucide-react"
 import { useState } from "react"
@@ -133,6 +134,10 @@ export default function Home() {
 										</p>
 									</div>
 								</div>
+
+								<ErrorBoundary label="Price history">
+									<PriceHistoryChart ticker={searchResult.ticker} />
+								</ErrorBoundary>
 
 								<ErrorBoundary label="Composite score">
 									<CompositeScoreGauge composite={searchResult.composite_score} />

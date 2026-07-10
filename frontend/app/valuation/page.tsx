@@ -25,6 +25,22 @@ const METHOD_LABELS: Record<string, string> = {
   asset_based: "Asset-Based (Book Value)",
 };
 
+const METHOD_EXPLAINERS: Record<string, string> = {
+  dcf: "Projects future free cash flows and discounts them back to today's dollars using a risk-adjusted rate (WACC). Sensitive to growth and discount-rate assumptions - best for mature, cash-generative businesses.",
+  comparable_company_analysis: "Applies the sector's median trading multiples (P/E, EV/EBITDA, etc.) to this company's own fundamentals. Reflects what the market is currently paying for similar businesses, not intrinsic value.",
+  ddm: "Values the stock as the present value of expected future dividends. Only meaningful for companies with an established, sustained dividend history.",
+  graham_number: "Benjamin Graham's conservative formula: sqrt(22.5 x EPS x Book Value per Share). A quick sanity-check floor value, not a full valuation - ignores growth and cash flow entirely.",
+  asset_based: "Values the company at its net tangible assets (book value), i.e. what would be left if it liquidated today. A floor estimate that ignores earning power - most relevant for asset-heavy or distressed companies.",
+};
+
+const METHOD_COLORS: Record<string, string> = {
+  dcf: "#eb5e28",
+  comparable_company_analysis: "#2f6690",
+  ddm: "#0ca30c",
+  graham_number: "#8a5cf6",
+  asset_based: "#c9a227",
+};
+
 const RATING_STYLES: Record<string, { color: string; label: string }> = {
   undervalued: { color: "bg-green-500", label: "Undervalued" },
   overvalued: { color: "bg-accent-red", label: "Overvalued" },
@@ -70,6 +86,9 @@ function MethodCard({ method }: { method: ValuationMethodResult }) {
           </>
         ) : (
           <p className="text-xs text-grayish">{method.note}</p>
+        )}
+        {METHOD_EXPLAINERS[method.method] && (
+          <p className="text-[11px] text-grayish mt-2 leading-relaxed">{METHOD_EXPLAINERS[method.method]}</p>
         )}
         {method.applicable && (
           <>
@@ -153,6 +172,26 @@ export default function ValuationPage() {
   }, [ticker]);
 
   const rating = valuation ? RATING_STYLES[valuation.rating] || RATING_STYLES.insufficient_data : null;
+
+  const fairValueChartData = valuation
+    ? [
+        {
+          name: "Current Price",
+          value: valuation.current_price,
+          fill: "#3a3835",
+        },
+        ...valuation.methods
+          .filter((m) => m.applicable && m.fair_value_per_share !== null && m.fair_value_per_share !== undefined)
+          .map((m) => ({
+            name: METHOD_LABELS[m.method] || m.method,
+            value: m.fair_value_per_share as number,
+            fill: METHOD_COLORS[m.method] || "#8a8580",
+          })),
+        ...(valuation.blended_fair_value_per_share !== null
+          ? [{ name: "Blended", value: valuation.blended_fair_value_per_share, fill: "#111827" }]
+          : []),
+      ]
+    : [];
 
   const coefficientChartData = peerPerformance
     ? peerPerformance.model.coefficients.map((c) => ({ name: c.label, value: c.coefficient }))
@@ -244,6 +283,40 @@ export default function ValuationPage() {
                 <p className="text-[11px] text-grayish mt-3 pt-3 border-t border-beige">{valuation.disclaimer}</p>
               </CardContent>
             </Card>
+
+            {fairValueChartData.length > 1 && (
+              <Card className="bg-light border-beige">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-dark">Fair Value by Method</CardTitle>
+                  <CardDescription className="text-xs text-grayish">
+                    Current market price vs. each method&apos;s implied fair value per share
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={fairValueChartData} margin={{ top: 5, right: 10, left: 0, bottom: 40 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e1e0d9" vertical={false} />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 10, fill: "#8a8580" }}
+                          angle={-25}
+                          textAnchor="end"
+                          interval={0}
+                        />
+                        <YAxis tick={{ fontSize: 10, fill: "#8a8580" }} tickFormatter={(v) => `$${v}`} width={45} />
+                        <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, "Fair value"]} />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {fairValueChartData.map((entry, i) => (
+                            <Cell key={i} fill={entry.fill} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {valuation.methods.map((m) => (

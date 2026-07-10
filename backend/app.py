@@ -33,6 +33,7 @@ from analysis.political_network import build_political_network
 from analysis.political_web import build_political_web
 from analysis.valuation import run_valuation
 from analysis.peer_performance_model import run_peer_performance_analysis
+from analysis.price_history import get_price_history
 
 # Import backtesting engine
 from backtesting.engine import run_backtest
@@ -129,6 +130,28 @@ def yahoo_endpoint():
             return jsonify(data)
         else:
             return jsonify({'error': f'No data found for ticker {ticker}'}), 404
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
+@app.route('/api/price-history', methods=['GET'])
+def price_history_endpoint():
+    """
+    Real historical close price + volume + 20/50-day SMA overlays, for charting.
+    Example: /api/price-history?ticker=AAPL&period=6mo
+    (period: 1mo, 3mo, 6mo, 1y, 2y, 5y)
+    """
+    ticker = request.args.get('ticker')
+    if not ticker:
+        return jsonify({'error': 'Ticker parameter is required'}), 400
+
+    period = request.args.get('period', '6mo')
+
+    try:
+        result = get_price_history(ticker, period)
+        if not result.get('success'):
+            return jsonify({'error': result.get('error', 'Unknown error')}), 404
+        return jsonify(result)
     except Exception as e:
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 

@@ -33,7 +33,8 @@ export default function CompositeScoreGauge({ composite }: CompositeScoreGaugePr
   const chartData = [{ name: "score", value: score, fill: style.color }];
 
   return (
-    <Card className="bg-light border-beige">
+    <Card className="bg-light border-beige overflow-hidden relative">
+      <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: style.color }} aria-hidden="true" />
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
@@ -42,7 +43,7 @@ export default function CompositeScoreGauge({ composite }: CompositeScoreGaugePr
               Weighted composite across all signals
             </CardDescription>
           </div>
-          <Badge style={{ backgroundColor: style.color }} className="text-white">
+          <Badge style={{ backgroundColor: style.color }} className="text-white shadow-soft">
             {style.label}
           </Badge>
         </div>
@@ -50,6 +51,11 @@ export default function CompositeScoreGauge({ composite }: CompositeScoreGaugePr
       <CardContent>
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="w-40 h-40 relative shrink-0">
+            <div
+              className="absolute inset-2 rounded-full blur-2xl opacity-25"
+              style={{ backgroundColor: style.color }}
+              aria-hidden="true"
+            />
             <ResponsiveContainer width="100%" height="100%">
               <RadialBarChart
                 innerRadius="70%"
@@ -63,27 +69,27 @@ export default function CompositeScoreGauge({ composite }: CompositeScoreGaugePr
               </RadialBarChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex items-center justify-center flex-col">
-              <span className="text-3xl font-bold text-dark">
+              <span className="text-4xl font-bold text-dark tabular-nums">
                 {composite.score !== null ? Math.round(composite.score) : "—"}
               </span>
-              <span className="text-[10px] text-grayish">/ 100</span>
+              <span className="text-[10px] text-grayish tracking-wide">/ 100</span>
             </div>
           </div>
 
-          <div className="flex-1 w-full space-y-2">
+          <div className="flex-1 w-full space-y-2.5">
             {Object.entries(composite.components).map(([key, value]) => (
               <div key={key} className="flex items-center gap-3">
                 <span className="text-xs text-grayish w-32 shrink-0">{COMPONENT_LABELS[key] || key}</span>
                 <div className="flex-1 h-2 rounded-full bg-beige/50 overflow-hidden">
                   <div
-                    className="h-full rounded-full"
+                    className="h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${value ?? 0}%`,
                       backgroundColor: value === null ? "#ccc5b9" : style.color,
                     }}
                   />
                 </div>
-                <span className="text-xs font-medium text-dark w-10 text-right">
+                <span className="text-xs font-medium text-dark w-10 text-right tabular-nums">
                   {value !== null ? Math.round(value) : "N/A"}
                 </span>
               </div>

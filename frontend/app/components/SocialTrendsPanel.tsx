@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { SocialTrendsResponse } from "@/lib/api";
 import { LineChart, Line, ResponsiveContainer, YAxis } from "recharts";
 import { Flame } from "lucide-react";
+import PanelIcon from "./PanelIcon";
 
 interface SocialTrendsPanelProps {
   social: SocialTrendsResponse;
@@ -24,8 +25,8 @@ export default function SocialTrendsPanel({ social }: SocialTrendsPanelProps) {
   return (
     <Card className="bg-light border-beige">
       <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <Flame className="w-4 h-4 text-accent-red" />
+        <div className="flex items-center gap-3">
+          <PanelIcon><Flame className="w-4 h-4" /></PanelIcon>
           <div>
             <CardTitle className="text-base font-semibold text-dark">Social & Search Momentum</CardTitle>
             <CardDescription className="text-xs text-grayish">Retail attention velocity</CardDescription>

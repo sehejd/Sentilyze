@@ -3,7 +3,8 @@
 import { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SwotResponse } from "@/lib/api";
-import { TrendingUp, TrendingDown, Target, ShieldAlert } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, ShieldAlert, LayoutGrid } from "lucide-react";
+import PanelIcon from "./PanelIcon";
 
 interface SwotPanelProps {
   swot: SwotResponse;
@@ -26,17 +27,24 @@ export default function SwotPanel({ swot }: SwotPanelProps) {
   return (
     <Card className="bg-light border-beige">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-dark">SWOT Analysis</CardTitle>
-        <CardDescription className="text-xs text-grayish">
-          Strengths/weaknesses from fundamentals; opportunities/threats from sentiment, insider activity, geopolitics & social momentum
-        </CardDescription>
+        <div className="flex items-center gap-3">
+          <PanelIcon><LayoutGrid className="w-4 h-4" /></PanelIcon>
+          <div>
+            <CardTitle className="text-base font-semibold text-dark">SWOT Analysis</CardTitle>
+            <CardDescription className="text-xs text-grayish">
+              Strengths/weaknesses from fundamentals; opportunities/threats from sentiment, insider activity, geopolitics & social momentum
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {QUADRANTS.map((quadrant) => (
-            <div key={quadrant.key} className={`p-3 rounded border ${quadrant.border} ${quadrant.bg}`}>
+            <div key={quadrant.key} className={`p-3 rounded-lg border ${quadrant.border} ${quadrant.bg} transition-transform hover:-translate-y-0.5`}>
               <div className="flex items-center gap-2 mb-2">
-                {quadrant.icon}
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white/70 shrink-0">
+                  {quadrant.icon}
+                </span>
                 <h4 className="text-sm font-semibold text-dark">{quadrant.title}</h4>
               </div>
               <ul className="space-y-1.5">

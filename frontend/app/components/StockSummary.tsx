@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Minus, Brain, Clock } from "lucide-react";
+import PanelIcon from "./PanelIcon";
 
 interface StockSummaryProps {
   ticker: string;
@@ -91,8 +92,8 @@ export default function StockSummary({ ticker, analysis }: StockSummaryProps) {
         {(aiSummary || fallbackSummary) && (
           <Card className="bg-light border-beige lg:col-span-2">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold text-dark flex items-center gap-2">
-                <Brain className="w-4 h-4 text-accent-red" />
+              <CardTitle className="text-base font-semibold text-dark flex items-center gap-3">
+                <PanelIcon><Brain className="w-4 h-4" /></PanelIcon>
                 AI Summary
               </CardTitle>
             </CardHeader>

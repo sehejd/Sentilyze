@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { InsiderTradingResponse } from "@/lib/api";
 import { Landmark } from "lucide-react";
+import PanelIcon from "./PanelIcon";
 
 interface InsiderTradingPanelProps {
   insider: InsiderTradingResponse;
@@ -25,8 +26,8 @@ export default function InsiderTradingPanel({ insider }: InsiderTradingPanelProp
     <Card className="bg-light border-beige">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <Landmark className="w-4 h-4 text-accent-red" />
+          <div className="flex items-center gap-3">
+            <PanelIcon><Landmark className="w-4 h-4" /></PanelIcon>
             <div>
               <CardTitle className="text-base font-semibold text-dark">Political Insider Trading</CardTitle>
               <CardDescription className="text-xs text-grayish">

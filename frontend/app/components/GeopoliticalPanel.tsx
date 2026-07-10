@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { GeopoliticalResponse } from "@/lib/api";
 import { Globe2, ExternalLink } from "lucide-react";
+import PanelIcon from "./PanelIcon";
 
 interface GeopoliticalPanelProps {
   geopolitical: GeopoliticalResponse;
@@ -33,8 +34,8 @@ export default function GeopoliticalPanel({ geopolitical }: GeopoliticalPanelPro
     <Card className="bg-light border-beige">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <Globe2 className="w-4 h-4 text-accent-red" />
+          <div className="flex items-center gap-3">
+            <PanelIcon><Globe2 className="w-4 h-4" /></PanelIcon>
             <div>
               <CardTitle className="text-base font-semibold text-dark">Geopolitical Exposure</CardTitle>
               <CardDescription className="text-xs text-grayish">

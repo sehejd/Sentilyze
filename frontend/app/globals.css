@@ -8,6 +8,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-limelight: var(--font-limelight);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -123,7 +124,36 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
+  }
+  ::selection {
+    background-color: rgba(235, 94, 40, 0.25);
+    color: #252422;
+  }
+}
+
+/* Soft radial glow used behind hero/section headers for visual depth */
+.glow-blob {
+  background: radial-gradient(circle, rgba(235, 94, 40, 0.16) 0%, rgba(235, 94, 40, 0) 70%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+/* Faint dot-grid texture for large empty backgrounds */
+.dot-grid {
+  background-image: radial-gradient(rgba(37, 36, 34, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+@layer utilities {
+  .shadow-soft {
+    box-shadow: 0 1px 2px rgba(37, 36, 34, 0.04), 0 8px 24px -12px rgba(37, 36, 34, 0.12);
+  }
+  .shadow-soft-lg {
+    box-shadow: 0 2px 4px rgba(37, 36, 34, 0.04), 0 16px 40px -16px rgba(37, 36, 34, 0.18);
   }
 }

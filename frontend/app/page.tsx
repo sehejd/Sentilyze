@@ -73,18 +73,34 @@ export default function Home() {
 			/>
 
 			{/* Full Page Hero Section */}
-			<div className="min-h-screen flex flex-col justify-center items-center relative px-6">
-				<div className="text-left mb-16 w-full max-w-6xl">
+			<div className="min-h-screen flex flex-col justify-center items-center relative px-6 overflow-hidden">
+				{/* Depth: soft gradient glows + faint dot grid */}
+				<div className="absolute -top-32 -right-32 w-[560px] h-[560px] glow-blob rounded-full" aria-hidden="true" />
+				<div className="absolute -bottom-40 -left-24 w-[480px] h-[480px] glow-blob rounded-full opacity-70" aria-hidden="true" />
+				<div
+					className="absolute inset-0 dot-grid opacity-60"
+					style={{ maskImage: "radial-gradient(ellipse at center, black, transparent 70%)", WebkitMaskImage: "radial-gradient(ellipse at center, black, transparent 70%)" }}
+					aria-hidden="true"
+				/>
+
+				<div className="text-left mb-16 w-full max-w-6xl relative">
+					<div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full border border-beige bg-white/60 backdrop-blur-sm text-xs font-mono uppercase tracking-wider text-grayish">
+						<span className="relative flex h-2 w-2">
+							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-red opacity-75" />
+							<span className="relative inline-flex rounded-full h-2 w-2 bg-accent-red" />
+						</span>
+						Live multi-source analysis
+					</div>
 					<h1 className="text-8xl lg:text-9xl font-bold text-dark mb-8 tracking-tight">
 						The real-time stock<br />
-						sentiment engine.
+						<span className="bg-gradient-to-r from-dark to-accent-red bg-clip-text text-transparent">sentiment engine.</span>
 					</h1>
 					<p className="text-grayish max-w-lg font-mono text-lg mb-8">
 						Sentiment, fundamentals, insider activity, geopolitics & social momentum, blended into one score
 					</p>
 					<Link
 						href="/backtest"
-						className="inline-flex items-center gap-2 text-sm font-mono text-dark border border-beige rounded-full px-4 py-2 hover:bg-white transition-colors"
+						className="inline-flex items-center gap-2 text-sm font-mono text-dark border border-beige rounded-full px-4 py-2 bg-white/60 backdrop-blur-sm shadow-soft hover:shadow-soft-lg hover:-translate-y-0.5 hover:border-accent-red/40 transition-all"
 					>
 						<LineChart className="w-4 h-4" />
 						Try the backtesting panel
@@ -123,17 +139,39 @@ export default function Home() {
 						{/* Full Analysis Results (fundamentals, insider, geopolitical, social, SWOT, composite score) */}
 						{isFullAnalysis && !isLoading && (
 							<div className="w-full max-w-6xl mx-auto space-y-4">
-								<div className="flex items-center justify-between flex-wrap gap-3">
-									<div>
-										<h2 className="text-2xl font-bold text-dark">
-											{searchResult.company_name} (${searchResult.ticker})
-										</h2>
-										<p className="text-sm text-grayish">
-											Blended sentiment: <span className="font-medium text-dark capitalize">{searchResult.sentiment.blended.overall_label}</span>
-											{' '}({searchResult.sentiment.blended.n_sources} source{searchResult.sentiment.blended.n_sources === 1 ? '' : 's'})
-										</p>
-									</div>
-								</div>
+								<div className="flex items-center gap-4 flex-wrap p-5 rounded-xl border border-beige bg-gradient-to-br from-white to-light shadow-soft">
+						<div className="flex items-center justify-center w-14 h-14 rounded-xl bg-dark text-white font-bold text-lg shrink-0 shadow-soft">
+							{searchResult.ticker.slice(0, 4)}
+						</div>
+						<div className="flex-1 min-w-0">
+							<h2 className="text-2xl font-bold text-dark truncate">
+								{searchResult.company_name} <span className="text-grayish font-medium">(${searchResult.ticker})</span>
+							</h2>
+							<div className="flex items-center gap-2 mt-1">
+								<span
+									className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+										searchResult.sentiment.blended.overall_label === "positive"
+											? "bg-green-100 text-green-700"
+											: searchResult.sentiment.blended.overall_label === "negative"
+											? "bg-red-100 text-accent-red"
+											: "bg-beige/60 text-grayish"
+									}`}
+								>
+									<span className={`w-1.5 h-1.5 rounded-full ${
+										searchResult.sentiment.blended.overall_label === "positive"
+											? "bg-green-500"
+											: searchResult.sentiment.blended.overall_label === "negative"
+											? "bg-accent-red"
+											: "bg-grayish"
+									}`} />
+									<span className="capitalize">{searchResult.sentiment.blended.overall_label}</span> sentiment
+								</span>
+								<span className="text-xs text-grayish">
+									{searchResult.sentiment.blended.n_sources} source{searchResult.sentiment.blended.n_sources === 1 ? '' : 's'}
+								</span>
+							</div>
+						</div>
+					</div>
 
 								<ErrorBoundary label="Price history">
 									<PriceHistoryChart ticker={searchResult.ticker} />

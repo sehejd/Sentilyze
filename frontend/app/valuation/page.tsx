@@ -16,6 +16,7 @@ import {
   ValuationMethodResult,
   PeerPerformanceResponse,
 } from "@/lib/api";
+import PanelIcon from "@/app/components/PanelIcon";
 
 const METHOD_LABELS: Record<string, string> = {
   dcf: "Discounted Cash Flow",
@@ -62,7 +63,10 @@ function MethodCard({ method }: { method: ValuationMethodResult }) {
   const upside = method.upside_pct;
 
   return (
-    <Card className="bg-light border-beige">
+    <Card
+      className="bg-light border-beige border-l-4 transition-transform hover:-translate-y-0.5"
+      style={{ borderLeftColor: METHOD_COLORS[method.method] || "#ccc5b9" }}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold text-dark">{METHOD_LABELS[method.method] || method.method}</CardTitle>
@@ -200,15 +204,13 @@ export default function ValuationPage() {
   return (
     <div className="min-h-screen bg-light px-6 py-10">
       <div className="max-w-6xl mx-auto space-y-4">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-grayish hover:text-dark">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-grayish hover:text-dark transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
+          <PanelIcon size="lg"><Calculator className="w-6 h-6" /></PanelIcon>
           <div>
-            <h1 className="text-3xl font-bold text-dark flex items-center gap-2">
-              <Calculator className="w-7 h-7 text-accent-red" />
-              Valuation Calculator
-            </h1>
+            <h1 className="text-3xl font-bold text-dark">Valuation Calculator</h1>
             <p className="text-sm text-grayish">
               Five independent fundamental valuation methods, plus a peer-performance model
             </p>
@@ -245,7 +247,8 @@ export default function ValuationPage() {
 
         {valuation && rating && (
           <>
-            <Card className="bg-light border-beige">
+            <Card className="bg-light border-beige overflow-hidden relative">
+              <div className={`absolute top-0 left-0 right-0 h-1 ${rating.color}`} aria-hidden="true" />
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div>
@@ -256,7 +259,7 @@ export default function ValuationPage() {
                       {valuation.sector} {valuation.industry ? `· ${valuation.industry}` : ""} · Current price ${valuation.current_price}
                     </CardDescription>
                   </div>
-                  <Badge className={`${rating.color} text-white`}>{rating.label}</Badge>
+                  <Badge className={`${rating.color} text-white shadow-soft`}>{rating.label}</Badge>
                 </div>
               </CardHeader>
               <CardContent>
@@ -326,8 +329,8 @@ export default function ValuationPage() {
 
             <Card className="bg-light border-beige">
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-accent-red" />
+                <div className="flex items-center gap-3">
+                  <PanelIcon><Brain className="w-4 h-4" /></PanelIcon>
                   <div>
                     <CardTitle className="text-base font-semibold text-dark">Peer Performance Model</CardTitle>
                     <CardDescription className="text-xs text-grayish">

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { fetchPoliticalWeb, PoliticalWebResponse, PoliticalWebNodeType, PoliticalWebEdgeType } from "@/lib/api";
 import { computeGraphLayout, LayoutNode, LayoutLink } from "@/lib/graphLayout";
+import PanelIcon from "@/app/components/PanelIcon";
 
 const WIDTH = 1100;
 const HEIGHT = 720;
@@ -181,15 +182,13 @@ export default function PoliticalWebPage() {
   return (
     <div className="min-h-screen bg-light px-6 py-10">
       <div className="max-w-7xl mx-auto space-y-4">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-grayish hover:text-dark">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-grayish hover:text-dark transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
+          <PanelIcon size="lg"><Network className="w-6 h-6" /></PanelIcon>
           <div>
-            <h1 className="text-3xl font-bold text-dark flex items-center gap-2">
-              <Network className="w-7 h-7 text-accent-red" />
-              Political Web
-            </h1>
+            <h1 className="text-3xl font-bold text-dark">Political Web</h1>
             <p className="text-sm text-grayish">
               Every disclosed politician↔company congressional trade, enriched with lobbying, bill sponsors,
               and executive donations for the most active companies.
@@ -247,19 +246,19 @@ export default function PoliticalWebPage() {
         {data && layout && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="p-3 bg-white rounded border border-beige text-center">
+              <div className="p-3 bg-white rounded-lg border border-beige text-center shadow-soft transition-transform hover:-translate-y-0.5">
                 <p className="text-[11px] text-grayish">Nodes shown</p>
                 <p className="text-lg font-bold text-dark">{data.stats.total_nodes}</p>
               </div>
-              <div className="p-3 bg-white rounded border border-beige text-center">
+              <div className="p-3 bg-white rounded-lg border border-beige text-center shadow-soft transition-transform hover:-translate-y-0.5">
                 <p className="text-[11px] text-grayish">Edges shown</p>
                 <p className="text-lg font-bold text-dark">{data.stats.total_edges}</p>
               </div>
-              <div className="p-3 bg-white rounded border border-beige text-center">
+              <div className="p-3 bg-white rounded-lg border border-beige text-center shadow-soft transition-transform hover:-translate-y-0.5">
                 <p className="text-[11px] text-grayish">Total disclosed pairs</p>
                 <p className="text-lg font-bold text-dark">{data.stats.total_disclosed_trading_pairs}</p>
               </div>
-              <div className="p-3 bg-white rounded border border-beige text-center">
+              <div className="p-3 bg-white rounded-lg border border-beige text-center shadow-soft transition-transform hover:-translate-y-0.5">
                 <p className="text-[11px] text-grayish">Dataset transactions</p>
                 <p className="text-lg font-bold text-dark">{data.stats.dataset_totals.total_transactions}</p>
               </div>
@@ -284,7 +283,7 @@ export default function PoliticalWebPage() {
                     viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
                     width="100%"
                     height={HEIGHT}
-                    className="bg-white rounded cursor-grab active:cursor-grabbing"
+                    className="bg-white dot-grid rounded cursor-grab active:cursor-grabbing"
                     onMouseDown={handleBackgroundMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}

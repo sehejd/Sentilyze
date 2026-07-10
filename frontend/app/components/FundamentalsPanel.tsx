@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { FundamentalsResponse } from "@/lib/api";
 import { BarChart3 } from "lucide-react";
+import PanelIcon from "./PanelIcon";
 
 interface FundamentalsPanelProps {
   fundamentals: FundamentalsResponse;
@@ -52,8 +53,8 @@ export default function FundamentalsPanel({ fundamentals }: FundamentalsPanelPro
     <Card className="bg-light border-beige">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-accent-red" />
+          <div className="flex items-center gap-3">
+            <PanelIcon><BarChart3 className="w-4 h-4" /></PanelIcon>
             <div>
               <CardTitle className="text-base font-semibold text-dark">Fundamental Analysis</CardTitle>
               <CardDescription className="text-xs text-grayish">

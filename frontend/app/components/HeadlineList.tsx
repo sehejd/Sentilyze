@@ -107,7 +107,7 @@ export default function HeadlineList({ rawData }: HeadlineListProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Yahoo Finance Section */}
         {rawData.yahoo_finance?.success && (
-          <Card className="bg-light border-beige">
+          <Card className="bg-light border-beige border-t-4 border-t-violet-500 overflow-hidden">
             <CardHeader 
               className="cursor-pointer pb-3"
               onClick={() => toggleSection('yahoo')}
@@ -165,7 +165,7 @@ export default function HeadlineList({ rawData }: HeadlineListProps) {
 
         {/* Reddit Section */}
         {rawData.reddit?.success && (
-          <Card className="bg-light border-beige">
+          <Card className="bg-light border-beige border-t-4 border-t-orange-500 overflow-hidden">
             <CardHeader 
               className="cursor-pointer pb-3"
               onClick={() => toggleSection('reddit')}
@@ -228,7 +228,7 @@ export default function HeadlineList({ rawData }: HeadlineListProps) {
 
         {/* Twitter Section */}
         {rawData.twitter?.success && (
-          <Card className="bg-light border-beige">
+          <Card className="bg-light border-beige border-t-4 border-t-blue-500 overflow-hidden">
             <CardHeader 
               className="cursor-pointer pb-3"
               onClick={() => toggleSection('twitter')}

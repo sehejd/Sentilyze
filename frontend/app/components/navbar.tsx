@@ -75,29 +75,36 @@ export default function Navbar({
     }
   };
 
+  const navLinks = [
+    { href: "/", icon: Home, title: "Home" },
+    { href: "/backtest", icon: LineChart, title: "Backtesting" },
+    { href: "/political-web", icon: Network, title: "Political Web" },
+    { href: "/valuation", icon: Calculator, title: "Valuation Calculator" },
+  ];
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-[0_1px_12px_-4px_rgba(0,0,0,0.08)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Nav Header with Icons */}
           <div className="flex items-center space-x-8">
-            <h1 className="text-xl font-semibold text-gray-900" style={{ fontFamily: 'Limelight' }}>
+            <Link href="/" className="font-limelight text-xl tracking-wide text-dark hover:text-accent-red transition-colors">
               SENTILYZE
-            </h1>
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Home className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
-              </Link>
-              <Link href="/backtest" title="Backtesting">
-                <LineChart className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
-              </Link>
-              <Link href="/political-web" title="Political Web">
-                <Network className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
-              </Link>
-              <Link href="/valuation" title="Valuation Calculator">
-                <Calculator className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
-              </Link>
-              <User className="w-4 h-4 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors" />
+            </Link>
+            <div className="flex items-center space-x-1">
+              {navLinks.map(({ href, icon: Icon, title }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  title={title}
+                  className="p-2 rounded-lg text-gray-500 hover:text-accent-red hover:bg-accent-red/10 cursor-pointer transition-colors"
+                >
+                  <Icon className="w-4 h-4" />
+                </Link>
+              ))}
+              <span className="p-2 rounded-lg text-gray-500 hover:text-accent-red hover:bg-accent-red/10 cursor-pointer transition-colors">
+                <User className="w-4 h-4" />
+              </span>
             </div>
           </div>
 
@@ -110,13 +117,13 @@ export default function Navbar({
                 value={ticker}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                className="pr-10 bg-white/70 border-gray-200/50 focus:bg-white focus:border-gray-300"
+                className="pr-10 bg-white/70 border-gray-200/50 focus:bg-white focus:border-gray-300 focus:shadow-[0_0_0_3px_rgba(235,94,40,0.12)] transition-shadow"
                 disabled={isLoading}
               />
               <button
                 onClick={handleSearch}
                 disabled={isLoading || !ticker.trim()}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 hover:text-accent-red disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -125,10 +132,10 @@ export default function Navbar({
                 )}
               </button>
             </div>
-            
+
             {/* Error display */}
             {error && (
-              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-red-50 border border-red-200 rounded-md text-sm text-red-600 z-50">
+              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-red-50 border border-red-200 rounded-md text-sm text-red-600 z-50 shadow-lg">
                 {error}
               </div>
             )}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Trash2, Play, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Play, Loader2, AlertCircle, Sparkles, LineChart as LineChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import {
   BacktestResponse,
   FundamentalGateCheck,
 } from "@/lib/api";
+import PanelIcon from "@/app/components/PanelIcon";
 
 const OPERATOR_LABELS: Record<string, string> = {
   "<": "<", "<=": "≤", ">": ">", ">=": "≥", "==": "=",
@@ -208,10 +209,11 @@ export default function BacktestPage() {
   return (
     <div className="min-h-screen bg-light px-6 py-10">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-grayish hover:text-dark">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-grayish hover:text-dark transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
+          <PanelIcon size="lg"><LineChartIcon className="w-6 h-6" /></PanelIcon>
           <div>
             <h1 className="text-3xl font-bold text-dark">Backtesting Panel</h1>
             <p className="text-sm text-grayish">
@@ -401,7 +403,11 @@ export default function BacktestPage() {
 
         {result && (
           <div className="space-y-4">
-            <Card className="bg-light border-beige">
+            <Card className="bg-light border-beige overflow-hidden relative">
+              <div
+                className={`absolute top-0 left-0 right-0 h-1 ${result.stats.alpha_vs_buy_hold_pct >= 0 ? "bg-green-500" : "bg-accent-red"}`}
+                aria-hidden="true"
+              />
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold text-dark">
                   Results: {result.ticker} ({result.period.start} → {result.period.end})
@@ -413,18 +419,20 @@ export default function BacktestPage() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                   {[
-                    { label: "Total Return", value: `${result.stats.total_return_pct}%` },
-                    { label: "CAGR", value: `${result.stats.cagr_pct}%` },
-                    { label: "Max Drawdown", value: `${result.stats.max_drawdown_pct}%` },
-                    { label: "Sharpe Ratio", value: result.stats.sharpe_ratio ?? "N/A" },
-                    { label: "Trades", value: result.stats.num_trades },
-                    { label: "Win Rate", value: result.stats.win_rate_pct !== null ? `${result.stats.win_rate_pct}%` : "N/A" },
-                    { label: "Buy & Hold Return", value: `${result.stats.buy_hold_return_pct}%` },
-                    { label: "Alpha vs Buy & Hold", value: `${result.stats.alpha_vs_buy_hold_pct}%` },
+                    { label: "Total Return", value: `${result.stats.total_return_pct}%`, signed: result.stats.total_return_pct },
+                    { label: "CAGR", value: `${result.stats.cagr_pct}%`, signed: result.stats.cagr_pct },
+                    { label: "Max Drawdown", value: `${result.stats.max_drawdown_pct}%`, signed: null },
+                    { label: "Sharpe Ratio", value: result.stats.sharpe_ratio ?? "N/A", signed: null },
+                    { label: "Trades", value: result.stats.num_trades, signed: null },
+                    { label: "Win Rate", value: result.stats.win_rate_pct !== null ? `${result.stats.win_rate_pct}%` : "N/A", signed: null },
+                    { label: "Buy & Hold Return", value: `${result.stats.buy_hold_return_pct}%`, signed: result.stats.buy_hold_return_pct },
+                    { label: "Alpha vs Buy & Hold", value: `${result.stats.alpha_vs_buy_hold_pct}%`, signed: result.stats.alpha_vs_buy_hold_pct },
                   ].map((stat) => (
-                    <div key={stat.label} className="p-3 bg-white rounded border border-beige text-center">
+                    <div key={stat.label} className="p-3 bg-white rounded-lg border border-beige text-center shadow-soft transition-transform hover:-translate-y-0.5">
                       <p className="text-[11px] text-grayish">{stat.label}</p>
-                      <p className="text-lg font-bold text-dark">{stat.value}</p>
+                      <p className={`text-lg font-bold ${
+                        stat.signed === null ? "text-dark" : stat.signed >= 0 ? "text-green-600" : "text-accent-red"
+                      }`}>{stat.value}</p>
                     </div>
                   ))}
                 </div>
@@ -455,7 +463,7 @@ export default function BacktestPage() {
                 <div className="max-h-80 overflow-y-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="text-left text-grayish border-b border-beige">
+                      <tr className="text-left text-grayish border-b border-beige sticky top-0 bg-light">
                         <th className="py-1.5 pr-3">Date</th>
                         <th className="py-1.5 pr-3">Action</th>
                         <th className="py-1.5 pr-3">Price</th>
@@ -466,7 +474,7 @@ export default function BacktestPage() {
                     </thead>
                     <tbody>
                       {result.trades.map((trade, i) => (
-                        <tr key={i} className="border-b border-beige/50">
+                        <tr key={i} className={`border-b border-beige/50 hover:bg-white/70 transition-colors ${i % 2 === 1 ? "bg-white/40" : ""}`}>
                           <td className="py-1.5 pr-3 text-dark">{trade.date}</td>
                           <td className="py-1.5 pr-3">
                             <span className={trade.action === "buy" ? "text-green-600 font-medium" : "text-accent-red font-medium"}>

@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { LineChart as LineChartIcon, Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { fetchPriceHistory, PriceHistoryResponse, PriceHistoryPeriod } from "@/lib/api";
+import PanelIcon from "./PanelIcon";
 
 interface PriceHistoryChartProps {
   ticker: string;
@@ -97,8 +98,8 @@ export default function PriceHistoryChart({ ticker }: PriceHistoryChartProps) {
     <Card className="bg-light border-beige">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <LineChartIcon className="w-4 h-4 text-accent-red" />
+          <div className="flex items-center gap-3">
+            <PanelIcon><LineChartIcon className="w-4 h-4" /></PanelIcon>
             <div>
               <CardTitle className="text-base font-semibold text-dark">Price History</CardTitle>
               <CardDescription className="text-xs text-grayish">
